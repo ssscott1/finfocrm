@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finfo CRM</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+    .modal-backdrop { backdrop-filter: blur(2px); }
+    .pipeline-bar > div { transition: width 0.4s ease; }
+    tr { transition: background 0.1s; }
+    input:focus, select:focus, textarea:focus { outline: none; }
+    .sort-btn:hover .sort-icon { opacity: 1; }
+    .sort-icon { opacity: 0.3; }
+    .sort-icon.active { opacity: 1; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+    .fade-in { animation: fadeIn 0.15s ease; }
+  </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+
+<!-- HEADER -->
+<header class="bg-white border-b border-gray-200 sticky top-0 z-20">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+        <span class="text-white font-bold text-sm">F</span>
+      </div>
+      <span class="text-xl font-bold text-gray-900">Finfo CRM</span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button onclick="openImport()" class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Import CSV</button>
+      <button onclick="exportCSV()" class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Export CSV</button>
+      <button onclick="openModal('add')" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+        Add Lead
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+
+  <!-- STAT CARDS -->
+  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-row"></div>
+
+  <!-- PIPELINE BAR -->
+  <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
+    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Pipeline</p>
+    <div class="flex rounded-full overflow-hidden h-3 pipeline-bar" id="pipeline-bar"></div>
+    <div class="flex flex-wrap gap-4 mt-3" id="pipeline-legend"></div>
+  </div>
+
+  <!-- FILTERS -->
+  <div class="flex flex-wrap gap-2 mb-4" id="status-chips"></div>
+
+  <!-- SEARCH + SORT -->
+  <div class="flex gap-3 mb-4">
+    <div class="relative flex-1">
+      <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input id="search-input" type="text" placeholder="Search name, email, company…"
+        class="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
+        oninput="render()" />
+    </div>
+    <select id="sort-select" onchange="render()"
+      class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500">
+      <option value="created_desc">Newest first</option>
+      <option value="created_asc">Oldest first</option>
+      <option value="name_asc">Name A–Z</option>
+      <option value="name_desc">Name Z–A</option>
+      <option value="value_desc">Value (high)</option>
+      <option value="value_asc">Value (low)</option>
+      <option value="status_asc">Status</option>
+    </select>
+  </div>
+
+  <!-- TABLE -->
+  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="bg-gray-50 border-b border-gray-200 text-left text-gray-500 font-medium">
+            <th class="px-4 py-3">Name</th>
+            <th class="px-4 py-3">Status</th>
+            <th class="px-4 py-3">Value</th>
+            <th class="px-4 py-3">Source</th>
+            <th class="px-4 py-3">Contact</th>
+            <th class="px-4 py-3">Created</th>
+            <th class="px-4 py-3"></th>
+          </tr>
+        </thead>
+        <tbody id="leads-tbody" class="divide-y divide-gray-100"></tbody>
+      </table>
+    </div>
+    <div id="empty-state" class="hidden text-center py-16 text-gray-400">
+      <svg class="mx-auto mb-3 text-gray-300" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <p class="font-medium text-gray-500">No leads found</p>
+      <p class="text-sm mt-1">Add your first lead or adjust your filters</p>
+    </div>
+  </div>
+</main>
+
+<!-- =================== ADD/EDIT MODAL =================== -->
+<div id="modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop bg-black/40">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto fade-in">
+    <div class="flex items-center justify-between px-6 py-4 border-b">
+      <h2 id="modal-title" class="text-lg font-semibold text-gray-900">Add Lead</h2>
+      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <form id="lead-form" class="px-6 py-4 space-y-4" onsubmit="saveLead(event)">
+      <input type="hidden" id="form-id" />
+      <div class="grid grid-cols-2 gap-4">
+        <div class="col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Name *</label>
+          <input id="f-name" type="text" required placeholder="Full name"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Company</label>
+          <input id="f-company" type="text" placeholder="Company name"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email</label>
+          <input id="f-email" type="email" placeholder="email@example.com"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Phone</label>
+          <input id="f-phone" type="tel" placeholder="+44 7700 900000"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Deal Value (£)</label>
+          <input id="f-value" type="number" min="0" step="0.01" placeholder="0"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Source</label>
+          <select id="f-source" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+            <option>website</option><option>referral</option><option>social</option>
+            <option>email</option><option>cold-call</option><option>other</option>
+          </select>
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Status</label>
+          <select id="f-status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
+            <option value="new">New</option>
+            <option value="contacted">Contacted</option>
+            <option value="qualified">Qualified</option>
+            <option value="proposal">Proposal</option>
+            <option value="won">Won</option>
+            <option value="lost">Lost</option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Notes</label>
+          <textarea id="f-notes" rows="3" placeholder="Any notes about this lead…"
+            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"></textarea>
+        </div>
+      </div>
+      <div id="form-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm"></div>
+      <div class="flex justify-end gap-3 pt-2 border-t mt-4">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Lead</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- =================== DETAIL MODAL =================== -->
+<div id="detail-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop bg-black/40">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto fade-in">
+    <div class="flex items-center justify-between px-6 py-4 border-b">
+      <h2 id="detail-name" class="text-lg font-semibold text-gray-900"></h2>
+      <button onclick="closeDetail()" class="text-gray-400 hover:text-gray-600">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-4 space-y-5" id="detail-body"></div>
+  </div>
+</div>
+
+<!-- =================== IMPORT MODAL =================== -->
+<div id="import-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop bg-black/40">
+  <div class="bg-white rounded-xl shadow-2xl w-full max-w-md fade-in">
+    <div class="flex items-center justify-between px-6 py-4 border-b">
+      <h2 class="text-lg font-semibold text-gray-900">Import CSV</h2>
+      <button onclick="closeImport()" class="text-gray-400 hover:text-gray-600">
+        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="px-6 py-4 space-y-4">
+      <p class="text-sm text-gray-600">Upload a CSV with columns: <code class="bg-gray-100 px-1 rounded">name, email, phone, company, source, status, value, notes</code></p>
+      <input type="file" id="csv-file" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
+      <div id="import-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm"></div>
+      <div class="flex justify-end gap-3">
+        <button onclick="closeImport()" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
+        <button onclick="importCSV()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Import</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ─── DATA ────────────────────────────────────────────────────────────────────
+const KEY = 'finfo_crm_leads';
+const ACT_KEY = 'finfo_crm_activities';
+
+function load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
+function save(leads) { localStorage.setItem(KEY, JSON.stringify(leads)); }
+function loadActs() { try { return JSON.parse(localStorage.getItem(ACT_KEY) || '{}'); } catch { return {}; } }
+function saveActs(acts) { localStorage.setItem(ACT_KEY, JSON.stringify(acts)); }
+
+function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+
+const STATUS_META = {
+  new:       { label: 'New',       color: 'bg-blue-100 text-blue-800',     bar: '#3b82f6' },
+  contacted: { label: 'Contacted', color: 'bg-yellow-100 text-yellow-800', bar: '#f59e0b' },
+  qualified: { label: 'Qualified', color: 'bg-purple-100 text-purple-800', bar: '#8b5cf6' },
+  proposal:  { label: 'Proposal',  color: 'bg-orange-100 text-orange-800', bar: '#f97316' },
+  won:       { label: 'Won',       color: 'bg-green-100 text-green-800',   bar: '#22c55e' },
+  lost:      { label: 'Lost',      color: 'bg-red-100 text-red-800',       bar: '#ef4444' },
+};
+
+const ACT_META = {
+  note:    { icon: '📝', label: 'Note' },
+  call:    { icon: '📞', label: 'Call' },
+  email:   { icon: '✉️', label: 'Email' },
+  meeting: { icon: '🤝', label: 'Meeting' },
+};
+
+let activeStatus = '';
+let currentDetailId = null;
+
+// ─── STATS ───────────────────────────────────────────────────────────────────
+function renderStats() {
+  const leads = load();
+  const total = leads.length;
+  const pipeline = leads.filter(l => !['won','lost'].includes(l.status)).reduce((s,l) => s + (+l.value||0), 0);
+  const won = leads.filter(l => l.status === 'won').reduce((s,l) => s + (+l.value||0), 0);
+  const wonCount = leads.filter(l => l.status === 'won').length;
+
+  document.getElementById('stats-row').innerHTML = [
+    { icon: usersIcon(), label: 'Total Leads', value: total, bg: 'bg-blue-50', ic: 'text-blue-500' },
+    { icon: chartIcon(), label: 'Pipeline Value', value: fmtGBP(pipeline), bg: 'bg-purple-50', ic: 'text-purple-500' },
+    { icon: awardIcon(), label: 'Won Value', value: fmtGBP(won), bg: 'bg-green-50', ic: 'text-green-500' },
+    { icon: trendIcon(), label: 'Won Deals', value: wonCount, bg: 'bg-orange-50', ic: 'text-orange-500' },
+  ].map(s => `
+    <div class="bg-white rounded-xl border border-gray-200 p-4">
+      <div class="w-10 h-10 ${s.bg} rounded-lg flex items-center justify-center mb-3 ${s.ic}">${s.icon}</div>
+      <p class="text-2xl font-bold text-gray-900">${s.value}</p>
+      <p class="text-sm text-gray-500 mt-0.5">${s.label}</p>
+    </div>
+  `).join('');
+
+  // pipeline bar
+  const counts = {};
+  leads.forEach(l => counts[l.status] = (counts[l.status]||0)+1);
+  const bar = document.getElementById('pipeline-bar');
+  const legend = document.getElementById('pipeline-legend');
+  if (total === 0) {
+    bar.innerHTML = '<div class="w-full bg-gray-100 rounded-full"></div>';
+    legend.innerHTML = '<span class="text-xs text-gray-400">No leads yet</span>';
+  } else {
+    bar.innerHTML = Object.entries(STATUS_META).map(([k,m]) => {
+      const pct = ((counts[k]||0)/total*100).toFixed(1);
+      return pct > 0 ? `<div style="width:${pct}%;background:${m.bar}" title="${m.label}: ${counts[k]||0}"></div>` : '';
+    }).join('');
+    legend.innerHTML = Object.entries(STATUS_META).map(([k,m]) =>
+      `<span class="flex items-center gap-1 text-xs text-gray-600">
+        <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:${m.bar}"></span>
+        ${m.label} (${counts[k]||0})
+      </span>`
+    ).join('');
+  }
+}
+
+// ─── STATUS CHIPS ─────────────────────────────────────────────────────────────
+function renderChips() {
+  const leads = load();
+  const counts = {};
+  leads.forEach(l => counts[l.status] = (counts[l.status]||0)+1);
+
+  const all = [{ k: '', label: 'All' }, ...Object.entries(STATUS_META).map(([k,m]) => ({ k, label: m.label }))];
+  document.getElementById('status-chips').innerHTML = all.map(s => `
+    <button onclick="setStatus('${s.k}')"
+      class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${activeStatus === s.k
+        ? 'bg-blue-600 text-white'
+        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}">
+      ${s.label}${s.k && counts[s.k] ? ` (${counts[s.k]})` : ''}
+    </button>
+  `).join('');
+}
+
+function setStatus(s) { activeStatus = s; render(); }
+
+// ─── TABLE ────────────────────────────────────────────────────────────────────
+function render() {
+  renderStats();
+  renderChips();
+
+  let leads = load();
+  const q = document.getElementById('search-input').value.toLowerCase();
+  const sort = document.getElementById('sort-select').value;
+
+  if (activeStatus) leads = leads.filter(l => l.status === activeStatus);
+  if (q) leads = leads.filter(l =>
+    (l.name||'').toLowerCase().includes(q) ||
+    (l.email||'').toLowerCase().includes(q) ||
+    (l.company||'').toLowerCase().includes(q) ||
+    (l.phone||'').toLowerCase().includes(q)
+  );
+
+  const [field, dir] = sort.split('_');
+  leads.sort((a, b) => {
+    let av = field === 'created' ? a.created_at : field === 'value' ? (+a.value||0) : a.name;
+    let bv = field === 'created' ? b.created_at : field === 'value' ? (+b.value||0) : b.name;
+    if (field === 'status') { av = a.status; bv = b.status; }
+    if (av < bv) return dir === 'asc' ? -1 : 1;
+    if (av > bv) return dir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  const tbody = document.getElementById('leads-tbody');
+  const empty = document.getElementById('empty-state');
+
+  if (leads.length === 0) {
+    tbody.innerHTML = '';
+    empty.classList.remove('hidden');
+  } else {
+    empty.classList.add('hidden');
+    tbody.innerHTML = leads.map(l => `
+      <tr class="hover:bg-gray-50 cursor-pointer" onclick="openDetail('${l.id}')">
+        <td class="px-4 py-3">
+          <div>
+            <p class="font-medium text-gray-900">${esc(l.name)}</p>
+            ${l.company ? `<p class="text-xs text-gray-400">${esc(l.company)}</p>` : ''}
+          </div>
+        </td>
+        <td class="px-4 py-3">
+          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_META[l.status]?.color||''}">
+            ${STATUS_META[l.status]?.label||l.status}
+          </span>
+        </td>
+        <td class="px-4 py-3 font-medium text-gray-700">${l.value > 0 ? fmtGBP(+l.value) : '—'}</td>
+        <td class="px-4 py-3 text-gray-500 capitalize">${esc(l.source||'—')}</td>
+        <td class="px-4 py-3">
+          <div class="text-xs text-gray-500 space-y-0.5">
+            ${l.email ? `<p>${esc(l.email)}</p>` : ''}
+            ${l.phone ? `<p>${esc(l.phone)}</p>` : ''}
+            ${!l.email && !l.phone ? '<span class="text-gray-300">—</span>' : ''}
+          </div>
+        </td>
+        <td class="px-4 py-3 text-gray-500">${fmtDate(l.created_at)}</td>
+        <td class="px-4 py-3" onclick="event.stopPropagation()">
+          <div class="flex items-center gap-1 justify-end">
+            <button onclick="openModal('edit','${l.id}')" title="Edit"
+              class="p-1.5 text-gray-400 hover:text-blue-600 rounded">${editIcon()}</button>
+            <button onclick="deleteLead('${l.id}')" title="Delete"
+              class="p-1.5 text-gray-400 hover:text-red-600 rounded">${trashIcon()}</button>
+          </div>
+        </td>
+      </tr>
+    `).join('');
+  }
+}
+
+// ─── LEAD CRUD ────────────────────────────────────────────────────────────────
+function openModal(mode, id) {
+  document.getElementById('modal-title').textContent = mode === 'add' ? 'Add Lead' : 'Edit Lead';
+  document.getElementById('form-id').value = id || '';
+  document.getElementById('form-error').classList.add('hidden');
+
+  const lead = id ? load().find(l => l.id === id) : null;
+  ['name','company','email','phone','source','status','notes'].forEach(f => {
+    document.getElementById('f-'+f).value = lead ? (lead[f]||'') : (f==='source'?'website': f==='status'?'new':'');
+  });
+  document.getElementById('f-value').value = lead ? (lead.value||'') : '';
+  document.getElementById('modal-overlay').classList.remove('hidden');
+}
+
+function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
+
+function saveLead(e) {
+  e.preventDefault();
+  const id = document.getElementById('form-id').value;
+  const name = document.getElementById('f-name').value.trim();
+  if (!name) { showFormError('Name is required'); return; }
+
+  const leads = load();
+  const now = new Date().toISOString();
+  const lead = {
+    id: id || uid(),
+    name,
+    company: document.getElementById('f-company').value.trim(),
+    email:   document.getElementById('f-email').value.trim(),
+    phone:   document.getElementById('f-phone').value.trim(),
+    source:  document.getElementById('f-source').value,
+    status:  document.getElementById('f-status').value,
+    value:   parseFloat(document.getElementById('f-value').value) || 0,
+    notes:   document.getElementById('f-notes').value.trim(),
+    created_at: id ? (leads.find(l=>l.id===id)?.created_at||now) : now,
+    updated_at: now,
+  };
+
+  if (id) {
+    const idx = leads.findIndex(l => l.id === id);
+    if (idx >= 0) leads[idx] = lead;
+  } else {
+    leads.unshift(lead);
+  }
+  save(leads);
+  closeModal();
+  render();
+}
+
+function deleteLead(id) {
+  if (!confirm('Delete this lead? This cannot be undone.')) return;
+  const leads = load().filter(l => l.id !== id);
+  save(leads);
+  // also clear activities
+  const acts = loadActs();
+  delete acts[id];
+  saveActs(acts);
+  if (currentDetailId === id) closeDetail();
+  render();
+}
+
+function showFormError(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+// ─── DETAIL PANEL ─────────────────────────────────────────────────────────────
+function openDetail(id) {
+  currentDetailId = id;
+  renderDetail(id);
+  document.getElementById('detail-overlay').classList.remove('hidden');
+}
+
+function closeDetail() {
+  document.getElementById('detail-overlay').classList.add('hidden');
+  currentDetailId = null;
+}
+
+function renderDetail(id) {
+  const lead = load().find(l => l.id === id);
+  if (!lead) return;
+
+  document.getElementById('detail-name').textContent = lead.name;
+  const acts = (loadActs()[id] || []).slice().reverse();
+
+  document.getElementById('detail-body').innerHTML = `
+    <!-- Info row -->
+    <div class="flex flex-wrap gap-4 text-sm text-gray-600">
+      ${lead.company ? `<span class="font-medium text-gray-800">${esc(lead.company)}</span>` : ''}
+      ${lead.email ? `<a href="mailto:${esc(lead.email)}" class="text-blue-600 hover:underline">✉️ ${esc(lead.email)}</a>` : ''}
+      ${lead.phone ? `<a href="tel:${esc(lead.phone)}" class="text-blue-600 hover:underline">📞 ${esc(lead.phone)}</a>` : ''}
+      ${lead.source ? `<span>🌐 ${esc(lead.source)}</span>` : ''}
+      <button onclick="openModal('edit','${id}');closeDetail()" class="ml-auto flex items-center gap-1 text-blue-600 hover:underline text-xs">${editIcon(14)} Edit</button>
+    </div>
+
+    <!-- Value -->
+    ${lead.value > 0 ? `
+    <div class="bg-green-50 border border-green-100 rounded-lg px-4 py-3">
+      <p class="text-xs text-green-600 font-medium">Deal Value</p>
+      <p class="text-2xl font-bold text-green-700">${fmtGBP(+lead.value)}</p>
+    </div>` : ''}
+
+    <!-- Status -->
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Pipeline Stage</p>
+      <div class="flex flex-wrap gap-2">
+        ${Object.entries(STATUS_META).map(([k,m]) => `
+          <button onclick="changeStatus('${id}','${k}')"
+            class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${lead.status===k ? m.color+' ring-2 ring-offset-1 ring-current' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
+            ${m.label}
+          </button>
+        `).join('')}
+      </div>
+    </div>
+
+    <!-- Notes -->
+    ${lead.notes ? `
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
+      <p class="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-lg p-3">${esc(lead.notes)}</p>
+    </div>` : ''}
+
+    <!-- Activity -->
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Activity Log</p>
+      <div class="flex gap-2 mb-3" id="act-types">
+        ${Object.entries(ACT_META).map(([k,m],i) => `
+          <button onclick="setActType('${k}')"
+            id="act-type-${k}"
+            class="px-3 py-1 text-xs rounded-full font-medium transition-colors ${i===0?'bg-blue-600 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+            ${m.icon} ${m.label}
+          </button>
+        `).join('')}
+      </div>
+      <div class="flex gap-2 mb-4">
+        <input id="act-input" type="text" placeholder="Log a note…"
+          class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+          onkeydown="if(event.key==='Enter'){addActivity('${id}');event.preventDefault()}" />
+        <button onclick="addActivity('${id}')" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add</button>
+      </div>
+      <div class="space-y-3" id="act-list">
+        ${acts.length === 0 ? '<p class="text-sm text-gray-400 text-center py-4">No activity yet</p>' :
+          acts.map(a => `
+            <div class="flex gap-3 text-sm">
+              <span class="text-lg leading-tight mt-0.5">${ACT_META[a.type]?.icon||'📝'}</span>
+              <div>
+                <p class="text-gray-800">${esc(a.content)}</p>
+                <p class="text-xs text-gray-400 mt-0.5">${fmtDateTime(a.created_at)}</p>
+              </div>
+            </div>
+          `).join('')
+        }
+      </div>
+    </div>
+  `;
+
+  // track selected activity type
+  window._actType = 'note';
+}
+
+let _actType = 'note';
+function setActType(t) {
+  _actType = t;
+  Object.keys(ACT_META).forEach(k => {
+    const btn = document.getElementById('act-type-'+k);
+    if (btn) btn.className = `px-3 py-1 text-xs rounded-full font-medium transition-colors ${k===t?'bg-blue-600 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+  });
+  document.getElementById('act-input').placeholder = `Log a ${t}…`;
+}
+
+function addActivity(id) {
+  const input = document.getElementById('act-input');
+  const content = input.value.trim();
+  if (!content) return;
+
+  const acts = loadActs();
+  if (!acts[id]) acts[id] = [];
+  acts[id].push({ id: uid(), type: _actType, content, created_at: new Date().toISOString() });
+  saveActs(acts);
+  input.value = '';
+  renderDetail(id);
+}
+
+function changeStatus(id, status) {
+  const leads = load();
+  const idx = leads.findIndex(l => l.id === id);
+  if (idx >= 0) { leads[idx].status = status; leads[idx].updated_at = new Date().toISOString(); }
+  save(leads);
+  render();
+  renderDetail(id);
+}
+
+// ─── IMPORT / EXPORT ─────────────────────────────────────────────────────────
+function openImport() { document.getElementById('import-overlay').classList.remove('hidden'); }
+function closeImport() { document.getElementById('import-overlay').classList.add('hidden'); }
+
+function importCSV() {
+  const file = document.getElementById('csv-file').files[0];
+  if (!file) { showImportError('Please select a CSV file'); return; }
+
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const rows = parseCSV(e.target.result);
+      if (rows.length === 0) { showImportError('No data rows found'); return; }
+
+      const leads = load();
+      const now = new Date().toISOString();
+      let added = 0;
+
+      rows.forEach(row => {
+        const name = (row.name || row.Name || '').trim();
+        if (!name) return;
+        leads.unshift({
+          id: uid(),
+          name,
+          email:   (row.email||row.Email||'').trim(),
+          phone:   (row.phone||row.Phone||'').trim(),
+          company: (row.company||row.Company||'').trim(),
+          source:  (row.source||row.Source||'website').trim(),
+          status:  validStatus(row.status||row.Status) || 'new',
+          value:   parseFloat(row.value||row.Value) || 0,
+          notes:   (row.notes||row.Notes||'').trim(),
+          created_at: now,
+          updated_at: now,
+        });
+        added++;
+      });
+
+      save(leads);
+      closeImport();
+      render();
+      alert(`Imported ${added} lead${added!==1?'s':''} successfully.`);
+    } catch (err) {
+      showImportError('Failed to parse CSV: ' + err.message);
+    }
+  };
+  reader.readAsText(file);
+}
+
+function showImportError(msg) {
+  const el = document.getElementById('import-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+function parseCSV(text) {
+  const lines = text.trim().split(/\r?\n/);
+  if (lines.length < 2) return [];
+  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
+  return lines.slice(1).map(line => {
+    const vals = splitCSVLine(line);
+    const obj = {};
+    headers.forEach((h,i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
+    return obj;
+  });
+}
+
+function splitCSVLine(line) {
+  const result = [];
+  let cur = '', inQ = false;
+  for (const c of line) {
+    if (c === '"') { inQ = !inQ; continue; }
+    if (c === ',' && !inQ) { result.push(cur); cur = ''; continue; }
+    cur += c;
+  }
+  result.push(cur);
+  return result;
+}
+
+function exportCSV() {
+  const leads = load();
+  if (leads.length === 0) { alert('No leads to export'); return; }
+  const headers = ['name','email','phone','company','source','status','value','notes','created_at'];
+  const rows = leads.map(l => headers.map(h => `"${(l[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'finfo-leads.csv'; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function validStatus(s) {
+  return ['new','contacted','qualified','proposal','won','lost'].includes((s||'').toLowerCase())
+    ? s.toLowerCase() : null;
+}
+
+// ─── HELPERS ──────────────────────────────────────────────────────────────────
+function fmtGBP(v) {
+  return new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0}).format(v);
+}
+function fmtDate(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+}
+function fmtDateTime(iso) {
+  if (!iso) return '—';
+  return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+}
+function esc(s) {
+  return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ─── ICONS ───────────────────────────────────────────────────────────────────
+const svgAttrs = (s=20) => `width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"`;
+function usersIcon()  { return `<svg ${svgAttrs()}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; }
+function chartIcon()  { return `<svg ${svgAttrs()}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`; }
+function awardIcon()  { return `<svg ${svgAttrs()}><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`; }
+function trendIcon()  { return `<svg ${svgAttrs()}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`; }
+function editIcon(s=16)  { return `<svg ${svgAttrs(s)}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`; }
+function trashIcon()  { return `<svg ${svgAttrs(16)}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`; }
+
+// close modals on backdrop click
+document.getElementById('modal-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
+document.getElementById('detail-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeDetail(); });
+document.getElementById('import-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeImport(); });
+document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDetail();closeImport();} });
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+render();
+</script>
+</body>
+</html>
