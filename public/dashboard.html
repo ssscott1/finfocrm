@@ -1,387 +1,506 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Finfo CRM</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-    .modal-backdrop { backdrop-filter: blur(2px); }
-    .pipeline-bar > div { transition: width 0.4s ease; }
-    tr { transition: background 0.1s; }
-    input:focus, select:focus, textarea:focus { outline: none; }
-    .sort-btn:hover .sort-icon { opacity: 1; }
-    .sort-icon { opacity: 0.3; }
-    .sort-icon.active { opacity: 1; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
-    .fade-in { animation: fadeIn 0.15s ease; }
-  </style>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finfo CRM</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8}
+  .modal-scroll{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
+  @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+  .slide-up{animation:slideUp 0.18s ease}
+  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+  .fade-in{animation:fadeIn 0.15s ease}
+  input:focus,select:focus,textarea:focus{outline:none}
+  .product-card{transition:transform 0.15s,box-shadow 0.15s}
+  .product-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px -5px rgba(0,0,0,0.12)}
+  .lead-row:hover{background:#f8faff}
+  .pill{transition:all 0.12s}
+  ::-webkit-scrollbar{width:6px;height:6px}
+  ::-webkit-scrollbar-track{background:transparent}
+  ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
+</style>
 </head>
-<body class="bg-gray-50 min-h-screen">
+<body class="min-h-screen">
 
-<!-- HEADER -->
-<header class="bg-white border-b border-gray-200 sticky top-0 z-20">
+<!-- TOP NAV -->
+<nav class="bg-white border-b border-gray-200 sticky top-0 z-30 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
     <div class="flex items-center gap-3">
-      <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-        <span class="text-white font-bold text-sm">F</span>
+      <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+        <span class="text-white font-bold text-base tracking-tight">Fi</span>
       </div>
-      <span class="text-xl font-bold text-gray-900">Finfo CRM</span>
+      <div>
+        <span class="text-lg font-bold text-gray-900">Finfo CRM</span>
+        <span class="hidden sm:inline text-xs text-gray-400 ml-2">Lead Management</span>
+      </div>
     </div>
     <div class="flex items-center gap-2">
-      <button onclick="openImport()" class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Import CSV</button>
-      <button onclick="exportCSV()" class="px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Export CSV</button>
-      <button onclick="openModal('add')" class="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg hover:bg-blue-700">
-        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
+      <button onclick="openImport()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        Import
+      </button>
+      <button onclick="exportCSV()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export
+      </button>
+      <button onclick="openModal('add')" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+        <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
         Add Lead
       </button>
     </div>
   </div>
-</header>
+</nav>
 
-<!-- MAIN -->
-<main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
+<!-- PAGE -->
+<main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
-  <!-- STAT CARDS -->
-  <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8" id="stats-row"></div>
+  <!-- SUMMARY ROW -->
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="summary-row"></div>
 
-  <!-- PIPELINE BAR -->
-  <div class="bg-white rounded-xl border border-gray-200 p-4 mb-6">
-    <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Pipeline</p>
-    <div class="flex rounded-full overflow-hidden h-3 pipeline-bar" id="pipeline-bar"></div>
-    <div class="flex flex-wrap gap-4 mt-3" id="pipeline-legend"></div>
-  </div>
-
-  <!-- FILTERS -->
-  <div class="flex flex-wrap gap-2 mb-4" id="status-chips"></div>
-
-  <!-- SEARCH + SORT -->
-  <div class="flex gap-3 mb-4">
-    <div class="relative flex-1">
-      <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-      <input id="search-input" type="text" placeholder="Search name, email, company…"
-        class="w-full pl-9 pr-4 py-2.5 border border-gray-200 rounded-lg text-sm bg-white focus:ring-2 focus:ring-blue-500"
-        oninput="render()" />
+  <!-- PRODUCT BREAKDOWN -->
+  <div>
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="text-sm font-semibold text-gray-500 uppercase tracking-wider">Leads by Product</h2>
+      <span id="breakdown-total" class="text-xs text-gray-400"></span>
     </div>
-    <select id="sort-select" onchange="render()"
-      class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-blue-500">
-      <option value="created_desc">Newest first</option>
-      <option value="created_asc">Oldest first</option>
-      <option value="name_asc">Name A–Z</option>
-      <option value="name_desc">Name Z–A</option>
-      <option value="value_desc">Value (high)</option>
-      <option value="value_asc">Value (low)</option>
-      <option value="status_asc">Status</option>
-    </select>
+    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3" id="product-cards"></div>
   </div>
 
-  <!-- TABLE -->
-  <div class="bg-white rounded-xl border border-gray-200 overflow-hidden">
+  <!-- LEADS TABLE -->
+  <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
+    <!-- Table header controls -->
+    <div class="px-4 py-3 border-b border-gray-100 flex flex-col sm:flex-row gap-3">
+      <div class="relative flex-1">
+        <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input id="search-input" type="text" placeholder="Search by name, email, phone…"
+          oninput="renderTable()"
+          class="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+      </div>
+      <div class="flex gap-2 flex-wrap">
+        <select id="filter-product" onchange="renderTable()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400">
+          <option value="">All Products</option>
+        </select>
+        <select id="filter-status" onchange="renderTable()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400">
+          <option value="">All Statuses</option>
+        </select>
+        <select id="filter-state" onchange="renderTable()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400">
+          <option value="">All States</option>
+        </select>
+        <select id="sort-select" onchange="renderTable()" class="border border-gray-200 rounded-lg px-3 py-2 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-400">
+          <option value="date_desc">Newest first</option>
+          <option value="date_asc">Oldest first</option>
+          <option value="name_asc">Name A–Z</option>
+          <option value="name_desc">Name Z–A</option>
+          <option value="product_asc">Product A–Z</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Table -->
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
-          <tr class="bg-gray-50 border-b border-gray-200 text-left text-gray-500 font-medium">
-            <th class="px-4 py-3">Name</th>
-            <th class="px-4 py-3">Status</th>
-            <th class="px-4 py-3">Value</th>
-            <th class="px-4 py-3">Source</th>
-            <th class="px-4 py-3">Contact</th>
-            <th class="px-4 py-3">Created</th>
+          <tr class="text-xs font-semibold text-gray-400 uppercase tracking-wider border-b border-gray-100 bg-gray-50/50">
+            <th class="px-4 py-3 text-left">Lead</th>
+            <th class="px-4 py-3 text-left">Product</th>
+            <th class="px-4 py-3 text-left">Status</th>
+            <th class="px-4 py-3 text-left hidden md:table-cell">State</th>
+            <th class="px-4 py-3 text-left hidden lg:table-cell">Timeframe</th>
+            <th class="px-4 py-3 text-left hidden lg:table-cell">Received</th>
             <th class="px-4 py-3"></th>
           </tr>
         </thead>
-        <tbody id="leads-tbody" class="divide-y divide-gray-100"></tbody>
+        <tbody id="leads-tbody" class="divide-y divide-gray-50"></tbody>
       </table>
     </div>
     <div id="empty-state" class="hidden text-center py-16 text-gray-400">
-      <svg class="mx-auto mb-3 text-gray-300" width="40" height="40" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-      <p class="font-medium text-gray-500">No leads found</p>
-      <p class="text-sm mt-1">Add your first lead or adjust your filters</p>
+      <svg class="mx-auto mb-3 text-gray-300" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <p class="font-semibold text-gray-500 text-base">No leads found</p>
+      <p class="text-sm mt-1">Try adjusting your filters or add a new lead</p>
     </div>
+    <div id="table-footer" class="px-4 py-3 border-t border-gray-100 text-xs text-gray-400"></div>
   </div>
+
 </main>
 
-<!-- =================== ADD/EDIT MODAL =================== -->
-<div id="modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop bg-black/40">
-  <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto fade-in">
-    <div class="flex items-center justify-between px-6 py-4 border-b">
-      <h2 id="modal-title" class="text-lg font-semibold text-gray-900">Add Lead</h2>
-      <button onclick="closeModal()" class="text-gray-400 hover:text-gray-600">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+<!-- ═══════════════════════════════════════════════
+     ADD / EDIT MODAL
+═══════════════════════════════════════════════ -->
+<div id="modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto modal-scroll slide-up">
+    <div class="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10 rounded-t-2xl">
+      <h2 id="modal-title" class="text-lg font-bold text-gray-900">Add New Lead</h2>
+      <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <form id="lead-form" class="px-6 py-4 space-y-4" onsubmit="saveLead(event)">
-      <input type="hidden" id="form-id" />
-      <div class="grid grid-cols-2 gap-4">
-        <div class="col-span-2">
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Name *</label>
-          <input id="f-name" type="text" required placeholder="Full name"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Company</label>
-          <input id="f-company" type="text" placeholder="Company name"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Email</label>
-          <input id="f-email" type="email" placeholder="email@example.com"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Phone</label>
-          <input id="f-phone" type="tel" placeholder="+44 7700 900000"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Deal Value (£)</label>
-          <input id="f-value" type="number" min="0" step="0.01" placeholder="0"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Source</label>
-          <select id="f-source" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
-            <option>website</option><option>referral</option><option>social</option>
-            <option>email</option><option>cold-call</option><option>other</option>
-          </select>
-        </div>
-        <div>
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Status</label>
-          <select id="f-status" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500">
-            <option value="new">New</option>
-            <option value="contacted">Contacted</option>
-            <option value="qualified">Qualified</option>
-            <option value="proposal">Proposal</option>
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-          </select>
-        </div>
-        <div class="col-span-2">
-          <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Notes</label>
-          <textarea id="f-notes" rows="3" placeholder="Any notes about this lead…"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"></textarea>
+    <form id="lead-form" onsubmit="saveLead(event)" class="px-6 py-5 space-y-5">
+      <input type="hidden" id="form-id"/>
+
+      <!-- Personal details -->
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Customer Details</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-400">*</span></label>
+            <input id="f-firstname" type="text" required placeholder="Jane"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-400">*</span></label>
+            <input id="f-lastname" type="text" required placeholder="Smith"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address <span class="text-red-400">*</span></label>
+            <input id="f-email" type="email" required placeholder="jane@example.com"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input id="f-phone" type="tel" placeholder="04XX XXX XXX"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
+            <select id="f-state" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
+              <option value="">— Select —</option>
+              <option>NSW</option><option>VIC</option><option>QLD</option>
+              <option>SA</option><option>WA</option><option>TAS</option>
+              <option>NT</option><option>ACT</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Timeframe</label>
+            <select id="f-timeframe" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
+              <option value="">— Select —</option>
+              <option>ASAP</option>
+              <option>1–3 months</option>
+              <option>3–6 months</option>
+              <option>6–12 months</option>
+              <option>Just researching</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div id="form-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-4 py-2 rounded text-sm"></div>
-      <div class="flex justify-end gap-3 pt-2 border-t mt-4">
-        <button type="button" onclick="closeModal()" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-        <button type="submit" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Save Lead</button>
+
+      <!-- Referral / Product -->
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Referral Details</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Product <span class="text-red-400">*</span></label>
+            <select id="f-product" required class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
+              <option value="">— Select product —</option>
+              <optgroup label="Loans">
+                <option value="Car Loan">Car Loan</option>
+                <option value="Boat Loan">Boat Loan</option>
+                <option value="Personal Loan">Personal Loan</option>
+              </optgroup>
+              <optgroup label="Property">
+                <option value="Mortgage">Mortgage</option>
+              </optgroup>
+              <optgroup label="Advisory">
+                <option value="Accountant">Accountant</option>
+                <option value="Financial Adviser">Financial Adviser</option>
+                <option value="SMSF Setup">SMSF Setup</option>
+              </optgroup>
+              <optgroup label="Protection">
+                <option value="Insurance">Insurance</option>
+              </optgroup>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
+            <select id="f-status" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
+              <option value="New">New</option>
+              <option value="Contacted">Contacted</option>
+              <option value="In Progress">In Progress</option>
+              <option value="Referred">Referred</option>
+              <option value="Completed">Completed</option>
+              <option value="Lost">Lost</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Referral Source</label>
+            <select id="f-source" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
+              <option value="">— Select —</option>
+              <option>Finfo Website</option>
+              <option>Google</option>
+              <option>Social Media</option>
+              <option>Word of Mouth</option>
+              <option>Email Campaign</option>
+              <option>Partner Referral</option>
+              <option>Other</option>
+            </select>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+            <textarea id="f-notes" rows="3" placeholder="Any additional information from the form submission…"
+              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50 resize-none"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <div id="form-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-2.5 rounded-lg text-sm"></div>
+
+      <div class="flex justify-end gap-3 pt-1">
+        <button type="button" onclick="closeModal()" class="px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
+        <button type="submit" class="px-6 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">Save Lead</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- =================== DETAIL MODAL =================== -->
-<div id="detail-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop bg-black/40">
-  <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto fade-in">
-    <div class="flex items-center justify-between px-6 py-4 border-b">
-      <h2 id="detail-name" class="text-lg font-semibold text-gray-900"></h2>
-      <button onclick="closeDetail()" class="text-gray-400 hover:text-gray-600">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+<!-- ═══════════════════════════════════════════════
+     LEAD DETAIL MODAL
+═══════════════════════════════════════════════ -->
+<div id="detail-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto modal-scroll slide-up">
+    <div class="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10 rounded-t-2xl">
+      <div>
+        <h2 id="detail-name" class="text-lg font-bold text-gray-900"></h2>
+        <p id="detail-sub" class="text-xs text-gray-400 mt-0.5"></p>
+      </div>
+      <button onclick="closeDetail()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="px-6 py-4 space-y-5" id="detail-body"></div>
+    <div class="px-6 py-5 space-y-5" id="detail-body"></div>
   </div>
 </div>
 
-<!-- =================== IMPORT MODAL =================== -->
-<div id="import-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-backdrop bg-black/40">
-  <div class="bg-white rounded-xl shadow-2xl w-full max-w-md fade-in">
-    <div class="flex items-center justify-between px-6 py-4 border-b">
-      <h2 class="text-lg font-semibold text-gray-900">Import CSV</h2>
-      <button onclick="closeImport()" class="text-gray-400 hover:text-gray-600">
-        <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
+<!-- ═══════════════════════════════════════════════
+     IMPORT MODAL
+═══════════════════════════════════════════════ -->
+<div id="import-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md slide-up">
+    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-gray-900">Import CSV</h2>
+      <button onclick="closeImport()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors">
+        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
-    <div class="px-6 py-4 space-y-4">
-      <p class="text-sm text-gray-600">Upload a CSV with columns: <code class="bg-gray-100 px-1 rounded">name, email, phone, company, source, status, value, notes</code></p>
-      <input type="file" id="csv-file" accept=".csv" class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-      <div id="import-error" class="hidden bg-red-50 border border-red-200 text-red-700 px-3 py-2 rounded text-sm"></div>
+    <div class="px-6 py-5 space-y-4">
+      <p class="text-sm text-gray-600">CSV columns: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">firstname, lastname, email, phone, state, timeframe, product, status, source, notes</code></p>
+      <input type="file" id="csv-file" accept=".csv"
+        class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
+      <div id="import-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm"></div>
       <div class="flex justify-end gap-3">
-        <button onclick="closeImport()" class="px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-lg hover:bg-gray-50">Cancel</button>
-        <button onclick="importCSV()" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Import</button>
+        <button onclick="closeImport()" class="px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+        <button onclick="doImport()" class="px-5 py-2.5 text-sm font-semibold text-white rounded-lg" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">Import</button>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ─── DATA ────────────────────────────────────────────────────────────────────
-const KEY = 'finfo_crm_leads';
-const ACT_KEY = 'finfo_crm_activities';
+// ─── CONSTANTS ────────────────────────────────────────────────────────────────
 
-function load() { try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch { return []; } }
-function save(leads) { localStorage.setItem(KEY, JSON.stringify(leads)); }
-function loadActs() { try { return JSON.parse(localStorage.getItem(ACT_KEY) || '{}'); } catch { return {}; } }
-function saveActs(acts) { localStorage.setItem(ACT_KEY, JSON.stringify(acts)); }
+const PRODUCTS = [
+  { id:'Car Loan',          group:'Loans',    color:'#3b82f6', bg:'#eff6ff', text:'#1d4ed8' },
+  { id:'Boat Loan',         group:'Loans',    color:'#0ea5e9', bg:'#f0f9ff', text:'#0369a1' },
+  { id:'Personal Loan',     group:'Loans',    color:'#6366f1', bg:'#eef2ff', text:'#4338ca' },
+  { id:'Mortgage',          group:'Property', color:'#8b5cf6', bg:'#f5f3ff', text:'#6d28d9' },
+  { id:'Accountant',        group:'Advisory', color:'#f59e0b', bg:'#fffbeb', text:'#b45309' },
+  { id:'Financial Adviser', group:'Advisory', color:'#f97316', bg:'#fff7ed', text:'#c2410c' },
+  { id:'SMSF Setup',        group:'Advisory', color:'#10b981', bg:'#ecfdf5', text:'#047857' },
+  { id:'Insurance',         group:'Protection',color:'#ef4444',bg:'#fef2f2', text:'#b91c1c' },
+];
 
-function uid() { return Date.now().toString(36) + Math.random().toString(36).slice(2); }
+const STATUSES = [
+  { id:'New',         color:'bg-blue-100 text-blue-700' },
+  { id:'Contacted',   color:'bg-yellow-100 text-yellow-700' },
+  { id:'In Progress', color:'bg-purple-100 text-purple-700' },
+  { id:'Referred',    color:'bg-orange-100 text-orange-700' },
+  { id:'Completed',   color:'bg-green-100 text-green-700' },
+  { id:'Lost',        color:'bg-red-100 text-red-700' },
+];
 
-const STATUS_META = {
-  new:       { label: 'New',       color: 'bg-blue-100 text-blue-800',     bar: '#3b82f6' },
-  contacted: { label: 'Contacted', color: 'bg-yellow-100 text-yellow-800', bar: '#f59e0b' },
-  qualified: { label: 'Qualified', color: 'bg-purple-100 text-purple-800', bar: '#8b5cf6' },
-  proposal:  { label: 'Proposal',  color: 'bg-orange-100 text-orange-800', bar: '#f97316' },
-  won:       { label: 'Won',       color: 'bg-green-100 text-green-800',   bar: '#22c55e' },
-  lost:      { label: 'Lost',      color: 'bg-red-100 text-red-800',       bar: '#ef4444' },
-};
+const AU_STATES = ['NSW','VIC','QLD','SA','WA','TAS','NT','ACT'];
 
-const ACT_META = {
-  note:    { icon: '📝', label: 'Note' },
-  call:    { icon: '📞', label: 'Call' },
-  email:   { icon: '✉️', label: 'Email' },
-  meeting: { icon: '🤝', label: 'Meeting' },
-};
+const KEY  = 'finfo_crm_v2_leads';
+const AKEY = 'finfo_crm_v2_acts';
 
-let activeStatus = '';
-let currentDetailId = null;
+// ─── STORAGE ──────────────────────────────────────────────────────────────────
 
-// ─── STATS ───────────────────────────────────────────────────────────────────
-function renderStats() {
+function load()       { try { return JSON.parse(localStorage.getItem(KEY)  || '[]'); } catch { return []; } }
+function save(d)      { localStorage.setItem(KEY,  JSON.stringify(d)); }
+function loadActs()   { try { return JSON.parse(localStorage.getItem(AKEY) || '{}'); } catch { return {}; } }
+function saveActs(d)  { localStorage.setItem(AKEY, JSON.stringify(d)); }
+function uid()        { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+function prodMeta(id) { return PRODUCTS.find(p => p.id === id) || { color:'#6b7280', bg:'#f9fafb', text:'#374151', group:'' }; }
+function statusMeta(id){ return STATUSES.find(s => s.id === id) || { color:'bg-gray-100 text-gray-600' }; }
+
+// ─── POPULATE FILTERS ────────────────────────────────────────────────────────
+
+function populateFilters() {
+  const fp = document.getElementById('filter-product');
+  PRODUCTS.forEach(p => { const o = new Option(p.id, p.id); fp.appendChild(o); });
+  const fs = document.getElementById('filter-status');
+  STATUSES.forEach(s => { const o = new Option(s.id, s.id); fs.appendChild(o); });
+  const fst = document.getElementById('filter-state');
+  AU_STATES.forEach(s => { const o = new Option(s, s); fst.appendChild(o); });
+}
+
+// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+
+function renderDashboard() {
   const leads = load();
   const total = leads.length;
-  const pipeline = leads.filter(l => !['won','lost'].includes(l.status)).reduce((s,l) => s + (+l.value||0), 0);
-  const won = leads.filter(l => l.status === 'won').reduce((s,l) => s + (+l.value||0), 0);
-  const wonCount = leads.filter(l => l.status === 'won').length;
+  const newCount = leads.filter(l => l.status === 'New').length;
+  const todayStr = new Date().toDateString();
+  const todayCount = leads.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
+  const completedCount = leads.filter(l => l.status === 'Completed').length;
 
-  document.getElementById('stats-row').innerHTML = [
-    { icon: usersIcon(), label: 'Total Leads', value: total, bg: 'bg-blue-50', ic: 'text-blue-500' },
-    { icon: chartIcon(), label: 'Pipeline Value', value: fmtGBP(pipeline), bg: 'bg-purple-50', ic: 'text-purple-500' },
-    { icon: awardIcon(), label: 'Won Value', value: fmtGBP(won), bg: 'bg-green-50', ic: 'text-green-500' },
-    { icon: trendIcon(), label: 'Won Deals', value: wonCount, bg: 'bg-orange-50', ic: 'text-orange-500' },
+  document.getElementById('summary-row').innerHTML = [
+    { label:'Total Leads',    value: total,          icon: peopleIcon(),   bg:'bg-blue-50',   ic:'text-blue-500' },
+    { label:'New Leads',      value: newCount,        icon: sparkIcon(),    bg:'bg-purple-50', ic:'text-purple-500' },
+    { label:'Added Today',    value: todayCount,      icon: calIcon(),      bg:'bg-green-50',  ic:'text-green-500' },
+    { label:'Completed',      value: completedCount,  icon: checkIcon(),    bg:'bg-orange-50', ic:'text-orange-500' },
   ].map(s => `
-    <div class="bg-white rounded-xl border border-gray-200 p-4">
-      <div class="w-10 h-10 ${s.bg} rounded-lg flex items-center justify-center mb-3 ${s.ic}">${s.icon}</div>
+    <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div class="w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center mb-3 ${s.ic}">${s.icon}</div>
       <p class="text-2xl font-bold text-gray-900">${s.value}</p>
-      <p class="text-sm text-gray-500 mt-0.5">${s.label}</p>
+      <p class="text-xs text-gray-500 mt-0.5 font-medium">${s.label}</p>
     </div>
   `).join('');
 
-  // pipeline bar
+  // Product breakdown cards
   const counts = {};
-  leads.forEach(l => counts[l.status] = (counts[l.status]||0)+1);
-  const bar = document.getElementById('pipeline-bar');
-  const legend = document.getElementById('pipeline-legend');
-  if (total === 0) {
-    bar.innerHTML = '<div class="w-full bg-gray-100 rounded-full"></div>';
-    legend.innerHTML = '<span class="text-xs text-gray-400">No leads yet</span>';
-  } else {
-    bar.innerHTML = Object.entries(STATUS_META).map(([k,m]) => {
-      const pct = ((counts[k]||0)/total*100).toFixed(1);
-      return pct > 0 ? `<div style="width:${pct}%;background:${m.bar}" title="${m.label}: ${counts[k]||0}"></div>` : '';
-    }).join('');
-    legend.innerHTML = Object.entries(STATUS_META).map(([k,m]) =>
-      `<span class="flex items-center gap-1 text-xs text-gray-600">
-        <span class="w-2.5 h-2.5 rounded-full inline-block" style="background:${m.bar}"></span>
-        ${m.label} (${counts[k]||0})
-      </span>`
-    ).join('');
-  }
+  leads.forEach(l => counts[l.product] = (counts[l.product]||0)+1);
+  document.getElementById('breakdown-total').textContent = `${total} total lead${total!==1?'s':''}`;
+
+  document.getElementById('product-cards').innerHTML = PRODUCTS.map(p => {
+    const n = counts[p.id] || 0;
+    const pct = total > 0 ? Math.round(n/total*100) : 0;
+    return `
+      <button onclick="filterByProduct('${p.id}')"
+        class="product-card bg-white rounded-xl border border-gray-200 p-3 text-left shadow-sm cursor-pointer">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center mb-2 text-white font-bold text-xs"
+          style="background:${p.color}">${p.id.split(' ').map(w=>w[0]).join('').slice(0,2)}</div>
+        <p class="text-xl font-bold text-gray-900">${n}</p>
+        <p class="text-xs font-medium text-gray-500 leading-tight mt-0.5">${p.id}</p>
+        <div class="mt-2 h-1 rounded-full bg-gray-100 overflow-hidden">
+          <div class="h-full rounded-full transition-all" style="width:${pct}%;background:${p.color}"></div>
+        </div>
+      </button>
+    `;
+  }).join('');
 }
 
-// ─── STATUS CHIPS ─────────────────────────────────────────────────────────────
-function renderChips() {
-  const leads = load();
-  const counts = {};
-  leads.forEach(l => counts[l.status] = (counts[l.status]||0)+1);
-
-  const all = [{ k: '', label: 'All' }, ...Object.entries(STATUS_META).map(([k,m]) => ({ k, label: m.label }))];
-  document.getElementById('status-chips').innerHTML = all.map(s => `
-    <button onclick="setStatus('${s.k}')"
-      class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${activeStatus === s.k
-        ? 'bg-blue-600 text-white'
-        : 'bg-white border border-gray-200 text-gray-600 hover:bg-gray-50'}">
-      ${s.label}${s.k && counts[s.k] ? ` (${counts[s.k]})` : ''}
-    </button>
-  `).join('');
+function filterByProduct(pid) {
+  document.getElementById('filter-product').value = pid;
+  renderTable();
+  document.getElementById('leads-tbody').closest('.bg-white').scrollIntoView({ behavior:'smooth', block:'start' });
 }
-
-function setStatus(s) { activeStatus = s; render(); }
 
 // ─── TABLE ────────────────────────────────────────────────────────────────────
-function render() {
-  renderStats();
-  renderChips();
+
+function renderTable() {
+  renderDashboard();
 
   let leads = load();
-  const q = document.getElementById('search-input').value.toLowerCase();
-  const sort = document.getElementById('sort-select').value;
+  const q       = document.getElementById('search-input').value.toLowerCase().trim();
+  const prod    = document.getElementById('filter-product').value;
+  const status  = document.getElementById('filter-status').value;
+  const state   = document.getElementById('filter-state').value;
+  const sort    = document.getElementById('sort-select').value;
 
-  if (activeStatus) leads = leads.filter(l => l.status === activeStatus);
-  if (q) leads = leads.filter(l =>
-    (l.name||'').toLowerCase().includes(q) ||
+  if (q)      leads = leads.filter(l =>
+    (`${l.firstname} ${l.lastname}`).toLowerCase().includes(q) ||
     (l.email||'').toLowerCase().includes(q) ||
-    (l.company||'').toLowerCase().includes(q) ||
     (l.phone||'').toLowerCase().includes(q)
   );
+  if (prod)   leads = leads.filter(l => l.product === prod);
+  if (status) leads = leads.filter(l => l.status  === status);
+  if (state)  leads = leads.filter(l => l.state   === state);
 
-  const [field, dir] = sort.split('_');
-  leads.sort((a, b) => {
-    let av = field === 'created' ? a.created_at : field === 'value' ? (+a.value||0) : a.name;
-    let bv = field === 'created' ? b.created_at : field === 'value' ? (+b.value||0) : b.name;
-    if (field === 'status') { av = a.status; bv = b.status; }
-    if (av < bv) return dir === 'asc' ? -1 : 1;
-    if (av > bv) return dir === 'asc' ? 1 : -1;
+  const [sf, sd] = sort.split('_');
+  leads.sort((a,b) => {
+    let av = sf==='date' ? a.created_at : sf==='name' ? `${a.firstname} ${a.lastname}` : a.product;
+    let bv = sf==='date' ? b.created_at : sf==='name' ? `${b.firstname} ${b.lastname}` : b.product;
+    if (av < bv) return sd==='asc' ? -1 : 1;
+    if (av > bv) return sd==='asc' ? 1 : -1;
     return 0;
   });
 
   const tbody = document.getElementById('leads-tbody');
   const empty = document.getElementById('empty-state');
+  const footer = document.getElementById('table-footer');
 
   if (leads.length === 0) {
     tbody.innerHTML = '';
     empty.classList.remove('hidden');
-  } else {
-    empty.classList.add('hidden');
-    tbody.innerHTML = leads.map(l => `
-      <tr class="hover:bg-gray-50 cursor-pointer" onclick="openDetail('${l.id}')">
-        <td class="px-4 py-3">
-          <div>
-            <p class="font-medium text-gray-900">${esc(l.name)}</p>
-            ${l.company ? `<p class="text-xs text-gray-400">${esc(l.company)}</p>` : ''}
+    footer.textContent = '';
+    return;
+  }
+  empty.classList.add('hidden');
+  footer.textContent = `Showing ${leads.length} lead${leads.length!==1?'s':''}`;
+
+  tbody.innerHTML = leads.map(l => {
+    const pm = prodMeta(l.product);
+    const sm = statusMeta(l.status);
+    return `
+      <tr class="lead-row cursor-pointer" onclick="openDetail('${l.id}')">
+        <td class="px-4 py-3.5">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-full flex items-center justify-center text-white text-sm font-semibold flex-shrink-0"
+              style="background:${pm.color}">
+              ${esc(l.firstname[0]||'?')}${esc(l.lastname[0]||'?')}
+            </div>
+            <div>
+              <p class="font-semibold text-gray-900">${esc(l.firstname)} ${esc(l.lastname)}</p>
+              <p class="text-xs text-gray-400">${esc(l.email||'')}</p>
+            </div>
           </div>
         </td>
-        <td class="px-4 py-3">
-          <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${STATUS_META[l.status]?.color||''}">
-            ${STATUS_META[l.status]?.label||l.status}
+        <td class="px-4 py-3.5">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold"
+            style="background:${pm.bg};color:${pm.text}">
+            <span class="w-1.5 h-1.5 rounded-full" style="background:${pm.color}"></span>
+            ${esc(l.product)}
           </span>
         </td>
-        <td class="px-4 py-3 font-medium text-gray-700">${l.value > 0 ? fmtGBP(+l.value) : '—'}</td>
-        <td class="px-4 py-3 text-gray-500 capitalize">${esc(l.source||'—')}</td>
-        <td class="px-4 py-3">
-          <div class="text-xs text-gray-500 space-y-0.5">
-            ${l.email ? `<p>${esc(l.email)}</p>` : ''}
-            ${l.phone ? `<p>${esc(l.phone)}</p>` : ''}
-            ${!l.email && !l.phone ? '<span class="text-gray-300">—</span>' : ''}
-          </div>
+        <td class="px-4 py-3.5">
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${sm.color}">${esc(l.status)}</span>
         </td>
-        <td class="px-4 py-3 text-gray-500">${fmtDate(l.created_at)}</td>
-        <td class="px-4 py-3" onclick="event.stopPropagation()">
+        <td class="px-4 py-3.5 text-sm text-gray-500 hidden md:table-cell">${l.state||'—'}</td>
+        <td class="px-4 py-3.5 text-sm text-gray-500 hidden lg:table-cell">${esc(l.timeframe||'—')}</td>
+        <td class="px-4 py-3.5 text-sm text-gray-400 hidden lg:table-cell">${fmtDate(l.created_at)}</td>
+        <td class="px-4 py-3.5 text-right" onclick="event.stopPropagation()">
           <div class="flex items-center gap-1 justify-end">
             <button onclick="openModal('edit','${l.id}')" title="Edit"
-              class="p-1.5 text-gray-400 hover:text-blue-600 rounded">${editIcon()}</button>
+              class="p-1.5 text-gray-300 hover:text-blue-500 rounded-lg hover:bg-blue-50 transition-colors">
+              ${editIcon()}</button>
             <button onclick="deleteLead('${l.id}')" title="Delete"
-              class="p-1.5 text-gray-400 hover:text-red-600 rounded">${trashIcon()}</button>
+              class="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors">
+              ${trashIcon()}</button>
           </div>
         </td>
       </tr>
-    `).join('');
-  }
+    `;
+  }).join('');
 }
 
-// ─── LEAD CRUD ────────────────────────────────────────────────────────────────
+// ─── CRUD ─────────────────────────────────────────────────────────────────────
+
 function openModal(mode, id) {
-  document.getElementById('modal-title').textContent = mode === 'add' ? 'Add Lead' : 'Edit Lead';
-  document.getElementById('form-id').value = id || '';
+  document.getElementById('modal-title').textContent = mode==='add' ? 'Add New Lead' : 'Edit Lead';
   document.getElementById('form-error').classList.add('hidden');
+  document.getElementById('form-id').value = id || '';
 
   const lead = id ? load().find(l => l.id === id) : null;
-  ['name','company','email','phone','source','status','notes'].forEach(f => {
-    document.getElementById('f-'+f).value = lead ? (lead[f]||'') : (f==='source'?'website': f==='status'?'new':'');
+  const fields = ['firstname','lastname','email','phone','state','timeframe','product','status','source','notes'];
+  fields.forEach(f => {
+    const el = document.getElementById('f-'+f);
+    if (el) el.value = lead ? (lead[f]||'') : (f==='status'?'New': f==='source'?'Finfo Website':'');
   });
-  document.getElementById('f-value').value = lead ? (lead.value||'') : '';
   document.getElementById('modal-overlay').classList.remove('hidden');
+  setTimeout(() => document.getElementById('f-firstname').focus(), 80);
 }
 
 function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
@@ -389,61 +508,73 @@ function closeModal() { document.getElementById('modal-overlay').classList.add('
 function saveLead(e) {
   e.preventDefault();
   const id = document.getElementById('form-id').value;
-  const name = document.getElementById('f-name').value.trim();
-  if (!name) { showFormError('Name is required'); return; }
+  const firstname = document.getElementById('f-firstname').value.trim();
+  const lastname  = document.getElementById('f-lastname').value.trim();
+  const product   = document.getElementById('f-product').value;
+
+  if (!firstname || !lastname) return showFormErr('First and last name are required.');
+  if (!product) return showFormErr('Please select a product.');
 
   const leads = load();
-  const now = new Date().toISOString();
-  const lead = {
-    id: id || uid(),
-    name,
-    company: document.getElementById('f-company').value.trim(),
-    email:   document.getElementById('f-email').value.trim(),
-    phone:   document.getElementById('f-phone').value.trim(),
-    source:  document.getElementById('f-source').value,
-    status:  document.getElementById('f-status').value,
-    value:   parseFloat(document.getElementById('f-value').value) || 0,
-    notes:   document.getElementById('f-notes').value.trim(),
+  const now   = new Date().toISOString();
+  const lead  = {
+    id:         id || uid(),
+    firstname,
+    lastname,
+    email:      document.getElementById('f-email').value.trim(),
+    phone:      document.getElementById('f-phone').value.trim(),
+    state:      document.getElementById('f-state').value,
+    timeframe:  document.getElementById('f-timeframe').value,
+    product,
+    status:     document.getElementById('f-status').value || 'New',
+    source:     document.getElementById('f-source').value,
+    notes:      document.getElementById('f-notes').value.trim(),
     created_at: id ? (leads.find(l=>l.id===id)?.created_at||now) : now,
     updated_at: now,
   };
 
   if (id) {
-    const idx = leads.findIndex(l => l.id === id);
-    if (idx >= 0) leads[idx] = lead;
+    const idx = leads.findIndex(l => l.id===id);
+    if (idx >= 0) leads[idx] = lead; else leads.unshift(lead);
   } else {
     leads.unshift(lead);
   }
   save(leads);
   closeModal();
-  render();
+  renderTable();
 }
 
 function deleteLead(id) {
   if (!confirm('Delete this lead? This cannot be undone.')) return;
-  const leads = load().filter(l => l.id !== id);
-  save(leads);
-  // also clear activities
-  const acts = loadActs();
-  delete acts[id];
-  saveActs(acts);
+  save(load().filter(l => l.id !== id));
+  const acts = loadActs(); delete acts[id]; saveActs(acts);
   if (currentDetailId === id) closeDetail();
-  render();
+  renderTable();
 }
 
-function showFormError(msg) {
+function showFormErr(msg) {
   const el = document.getElementById('form-error');
-  el.textContent = msg;
-  el.classList.remove('hidden');
+  el.textContent = msg; el.classList.remove('hidden');
 }
 
-// ─── DETAIL PANEL ─────────────────────────────────────────────────────────────
+// ─── DETAIL ───────────────────────────────────────────────────────────────────
+
+let currentDetailId = null;
+let _actType = 'note';
+
+const ACT_TYPES = [
+  { id:'note',    icon:'📝', label:'Note'    },
+  { id:'call',    icon:'📞', label:'Call'    },
+  { id:'email',   icon:'✉️',  label:'Email'   },
+  { id:'meeting', icon:'🤝', label:'Meeting' },
+];
+
 function openDetail(id) {
   currentDetailId = id;
+  _actType = 'note';
   renderDetail(id);
   document.getElementById('detail-overlay').classList.remove('hidden');
 }
-
 function closeDetail() {
   document.getElementById('detail-overlay').classList.add('hidden');
   currentDetailId = null;
@@ -452,103 +583,134 @@ function closeDetail() {
 function renderDetail(id) {
   const lead = load().find(l => l.id === id);
   if (!lead) return;
-
-  document.getElementById('detail-name').textContent = lead.name;
+  const pm = prodMeta(lead.product);
+  const sm = statusMeta(lead.status);
   const acts = (loadActs()[id] || []).slice().reverse();
 
+  document.getElementById('detail-name').textContent = `${lead.firstname} ${lead.lastname}`;
+  document.getElementById('detail-sub').textContent  = `Received ${fmtDate(lead.created_at)} · ${lead.product}`;
+
   document.getElementById('detail-body').innerHTML = `
-    <!-- Info row -->
-    <div class="flex flex-wrap gap-4 text-sm text-gray-600">
-      ${lead.company ? `<span class="font-medium text-gray-800">${esc(lead.company)}</span>` : ''}
-      ${lead.email ? `<a href="mailto:${esc(lead.email)}" class="text-blue-600 hover:underline">✉️ ${esc(lead.email)}</a>` : ''}
-      ${lead.phone ? `<a href="tel:${esc(lead.phone)}" class="text-blue-600 hover:underline">📞 ${esc(lead.phone)}</a>` : ''}
-      ${lead.source ? `<span>🌐 ${esc(lead.source)}</span>` : ''}
-      <button onclick="openModal('edit','${id}');closeDetail()" class="ml-auto flex items-center gap-1 text-blue-600 hover:underline text-xs">${editIcon(14)} Edit</button>
+
+    <!-- Product + status badges -->
+    <div class="flex flex-wrap gap-2 items-center">
+      <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
+        style="background:${pm.bg};color:${pm.text}">
+        <span class="w-2 h-2 rounded-full" style="background:${pm.color}"></span>
+        ${esc(lead.product)}
+      </span>
+      <span class="inline-flex px-3 py-1.5 rounded-full text-sm font-semibold ${sm.color}">${esc(lead.status)}</span>
+      <button onclick="openModal('edit','${id}');closeDetail()"
+        class="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+        ${editIcon(14)} Edit Lead
+      </button>
     </div>
 
-    <!-- Value -->
-    ${lead.value > 0 ? `
-    <div class="bg-green-50 border border-green-100 rounded-lg px-4 py-3">
-      <p class="text-xs text-green-600 font-medium">Deal Value</p>
-      <p class="text-2xl font-bold text-green-700">${fmtGBP(+lead.value)}</p>
-    </div>` : ''}
-
-    <!-- Status -->
-    <div>
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Pipeline Stage</p>
-      <div class="flex flex-wrap gap-2">
-        ${Object.entries(STATUS_META).map(([k,m]) => `
-          <button onclick="changeStatus('${id}','${k}')"
-            class="px-3 py-1.5 text-xs font-medium rounded-full transition-colors ${lead.status===k ? m.color+' ring-2 ring-offset-1 ring-current' : 'bg-gray-100 text-gray-500 hover:bg-gray-200'}">
-            ${m.label}
-          </button>
-        `).join('')}
+    <!-- Customer info grid -->
+    <div class="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-3">
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Email</p>
+        ${lead.email
+          ? `<a href="mailto:${esc(lead.email)}" class="text-sm text-blue-600 hover:underline">${esc(lead.email)}</a>`
+          : `<p class="text-sm text-gray-400">—</p>`}
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Phone</p>
+        ${lead.phone
+          ? `<a href="tel:${esc(lead.phone)}" class="text-sm text-blue-600 hover:underline">${esc(lead.phone)}</a>`
+          : `<p class="text-sm text-gray-400">—</p>`}
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">State</p>
+        <p class="text-sm text-gray-700">${lead.state||'—'}</p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Timeframe</p>
+        <p class="text-sm text-gray-700">${esc(lead.timeframe||'—')}</p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Referral Source</p>
+        <p class="text-sm text-gray-700">${esc(lead.source||'—')}</p>
+      </div>
+      <div>
+        <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Last Updated</p>
+        <p class="text-sm text-gray-700">${fmtDate(lead.updated_at)}</p>
       </div>
     </div>
 
     <!-- Notes -->
     ${lead.notes ? `
     <div>
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-1">Notes</p>
-      <p class="text-sm text-gray-700 whitespace-pre-wrap bg-gray-50 rounded-lg p-3">${esc(lead.notes)}</p>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Form Notes</p>
+      <p class="text-sm text-gray-700 whitespace-pre-wrap bg-amber-50 border border-amber-100 rounded-xl p-3">${esc(lead.notes)}</p>
     </div>` : ''}
 
-    <!-- Activity -->
+    <!-- Status change -->
+    <div>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Update Status</p>
+      <div class="flex flex-wrap gap-2">
+        ${STATUSES.map(s => `
+          <button onclick="changeStatus('${id}','${s.id}')"
+            class="px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
+              lead.status===s.id
+                ? s.color + ' ring-2 ring-offset-1 ring-current'
+                : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
+            }">
+            ${s.id}
+          </button>`).join('')}
+      </div>
+    </div>
+
+    <!-- Activity log -->
     <div>
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Activity Log</p>
-      <div class="flex gap-2 mb-3" id="act-types">
-        ${Object.entries(ACT_META).map(([k,m],i) => `
-          <button onclick="setActType('${k}')"
-            id="act-type-${k}"
-            class="px-3 py-1 text-xs rounded-full font-medium transition-colors ${i===0?'bg-blue-600 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
-            ${m.icon} ${m.label}
-          </button>
-        `).join('')}
+      <div class="flex gap-2 mb-3 flex-wrap">
+        ${ACT_TYPES.map((t,i) => `
+          <button id="atype-${t.id}" onclick="setActType('${t.id}')"
+            class="px-3 py-1 text-xs rounded-full font-semibold transition-all ${i===0?'bg-blue-600 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}">
+            ${t.icon} ${t.label}
+          </button>`).join('')}
       </div>
       <div class="flex gap-2 mb-4">
         <input id="act-input" type="text" placeholder="Log a note…"
-          class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
-          onkeydown="if(event.key==='Enter'){addActivity('${id}');event.preventDefault()}" />
-        <button onclick="addActivity('${id}')" class="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700">Add</button>
+          class="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"
+          onkeydown="if(event.key==='Enter'){addActivity('${id}');event.preventDefault()}"/>
+        <button onclick="addActivity('${id}')"
+          class="px-4 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors" style="background:#3b82f6">Add</button>
       </div>
-      <div class="space-y-3" id="act-list">
-        ${acts.length === 0 ? '<p class="text-sm text-gray-400 text-center py-4">No activity yet</p>' :
-          acts.map(a => `
-            <div class="flex gap-3 text-sm">
-              <span class="text-lg leading-tight mt-0.5">${ACT_META[a.type]?.icon||'📝'}</span>
-              <div>
+      <div id="act-list" class="space-y-3">
+        ${acts.length===0
+          ? '<p class="text-sm text-gray-400 text-center py-6">No activity logged yet</p>'
+          : acts.map(a => `
+            <div class="flex gap-3 text-sm bg-gray-50 rounded-xl p-3">
+              <span class="text-lg leading-none mt-0.5">${ACT_TYPES.find(t=>t.id===a.type)?.icon||'📝'}</span>
+              <div class="flex-1 min-w-0">
                 <p class="text-gray-800">${esc(a.content)}</p>
-                <p class="text-xs text-gray-400 mt-0.5">${fmtDateTime(a.created_at)}</p>
+                <p class="text-xs text-gray-400 mt-1">${fmtDateTime(a.created_at)}</p>
               </div>
-            </div>
-          `).join('')
-        }
+            </div>`).join('')}
       </div>
     </div>
   `;
-
-  // track selected activity type
-  window._actType = 'note';
 }
 
-let _actType = 'note';
 function setActType(t) {
   _actType = t;
-  Object.keys(ACT_META).forEach(k => {
-    const btn = document.getElementById('act-type-'+k);
-    if (btn) btn.className = `px-3 py-1 text-xs rounded-full font-medium transition-colors ${k===t?'bg-blue-600 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
+  ACT_TYPES.forEach(at => {
+    const btn = document.getElementById('atype-'+at.id);
+    if (btn) btn.className = `px-3 py-1 text-xs rounded-full font-semibold transition-all ${at.id===t?'bg-blue-600 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
   });
-  document.getElementById('act-input').placeholder = `Log a ${t}…`;
+  const input = document.getElementById('act-input');
+  if (input) input.placeholder = `Log a ${t}…`;
 }
 
 function addActivity(id) {
   const input = document.getElementById('act-input');
-  const content = input.value.trim();
+  const content = input?.value.trim();
   if (!content) return;
-
   const acts = loadActs();
   if (!acts[id]) acts[id] = [];
-  acts[id].push({ id: uid(), type: _actType, content, created_at: new Date().toISOString() });
+  acts[id].push({ id:uid(), type:_actType, content, created_at:new Date().toISOString() });
   saveActs(acts);
   input.value = '';
   renderDetail(id);
@@ -556,65 +718,74 @@ function addActivity(id) {
 
 function changeStatus(id, status) {
   const leads = load();
-  const idx = leads.findIndex(l => l.id === id);
-  if (idx >= 0) { leads[idx].status = status; leads[idx].updated_at = new Date().toISOString(); }
+  const idx = leads.findIndex(l => l.id===id);
+  if (idx>=0) { leads[idx].status = status; leads[idx].updated_at = new Date().toISOString(); }
   save(leads);
-  render();
   renderDetail(id);
+  renderTable();
 }
 
 // ─── IMPORT / EXPORT ─────────────────────────────────────────────────────────
-function openImport() { document.getElementById('import-overlay').classList.remove('hidden'); }
+
+function openImport()  { document.getElementById('import-overlay').classList.remove('hidden'); }
 function closeImport() { document.getElementById('import-overlay').classList.add('hidden'); }
 
-function importCSV() {
+function doImport() {
   const file = document.getElementById('csv-file').files[0];
-  if (!file) { showImportError('Please select a CSV file'); return; }
-
+  if (!file) { showImportErr('Please select a CSV file.'); return; }
   const reader = new FileReader();
   reader.onload = e => {
     try {
       const rows = parseCSV(e.target.result);
-      if (rows.length === 0) { showImportError('No data rows found'); return; }
-
+      if (!rows.length) { showImportErr('No data rows found.'); return; }
       const leads = load();
       const now = new Date().toISOString();
-      let added = 0;
-
-      rows.forEach(row => {
-        const name = (row.name || row.Name || '').trim();
-        if (!name) return;
+      let n = 0;
+      rows.forEach(r => {
+        const fn = (r.firstname||r['First Name']||'').trim();
+        const ln = (r.lastname||r['Last Name']||'').trim();
+        if (!fn && !ln) return;
         leads.unshift({
           id: uid(),
-          name,
-          email:   (row.email||row.Email||'').trim(),
-          phone:   (row.phone||row.Phone||'').trim(),
-          company: (row.company||row.Company||'').trim(),
-          source:  (row.source||row.Source||'website').trim(),
-          status:  validStatus(row.status||row.Status) || 'new',
-          value:   parseFloat(row.value||row.Value) || 0,
-          notes:   (row.notes||row.Notes||'').trim(),
-          created_at: now,
-          updated_at: now,
+          firstname: fn,
+          lastname:  ln,
+          email:     (r.email||r['Email']||'').trim(),
+          phone:     (r.phone||r['Phone']||'').trim(),
+          state:     (r.state||r['State']||'').trim(),
+          timeframe: (r.timeframe||r['Timeframe']||'').trim(),
+          product:   (r.product||r['Product']||'').trim(),
+          status:    (r.status||r['Status']||'New').trim(),
+          source:    (r.source||r['Source']||'').trim(),
+          notes:     (r.notes||r['Notes']||'').trim(),
+          created_at: now, updated_at: now,
         });
-        added++;
+        n++;
       });
-
       save(leads);
       closeImport();
-      render();
-      alert(`Imported ${added} lead${added!==1?'s':''} successfully.`);
-    } catch (err) {
-      showImportError('Failed to parse CSV: ' + err.message);
-    }
+      renderTable();
+      alert(`✓ Imported ${n} lead${n!==1?'s':''} successfully.`);
+    } catch(err) { showImportErr('Could not parse CSV: ' + err.message); }
   };
   reader.readAsText(file);
 }
 
-function showImportError(msg) {
+function showImportErr(msg) {
   const el = document.getElementById('import-error');
-  el.textContent = msg;
-  el.classList.remove('hidden');
+  el.textContent = msg; el.classList.remove('hidden');
+}
+
+function exportCSV() {
+  const leads = load();
+  if (!leads.length) { alert('No leads to export.'); return; }
+  const headers = ['firstname','lastname','email','phone','state','timeframe','product','status','source','notes','created_at','updated_at'];
+  const rows = leads.map(l => headers.map(h => `"${(l[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+  const csv = [headers.join(','), ...rows].join('\n');
+  const a = Object.assign(document.createElement('a'), {
+    href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})),
+    download: `finfo-leads-${new Date().toISOString().slice(0,10)}.csv`
+  });
+  a.click(); URL.revokeObjectURL(a.href);
 }
 
 function parseCSV(text) {
@@ -622,75 +793,53 @@ function parseCSV(text) {
   if (lines.length < 2) return [];
   const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
   return lines.slice(1).map(line => {
-    const vals = splitCSVLine(line);
+    const vals = splitLine(line);
     const obj = {};
     headers.forEach((h,i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
     return obj;
   });
 }
-
-function splitCSVLine(line) {
-  const result = [];
-  let cur = '', inQ = false;
-  for (const c of line) {
-    if (c === '"') { inQ = !inQ; continue; }
-    if (c === ',' && !inQ) { result.push(cur); cur = ''; continue; }
-    cur += c;
-  }
-  result.push(cur);
-  return result;
+function splitLine(line) {
+  const res=[]; let cur='', inQ=false;
+  for(const c of line){ if(c==='"'){inQ=!inQ;continue;} if(c===','&&!inQ){res.push(cur);cur='';continue;} cur+=c; }
+  res.push(cur); return res;
 }
 
-function exportCSV() {
-  const leads = load();
-  if (leads.length === 0) { alert('No leads to export'); return; }
-  const headers = ['name','email','phone','company','source','status','value','notes','created_at'];
-  const rows = leads.map(l => headers.map(h => `"${(l[h]||'').toString().replace(/"/g,'""')}"`).join(','));
-  const csv = [headers.join(','), ...rows].join('\n');
-  const blob = new Blob([csv], { type: 'text/csv' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'finfo-leads.csv'; a.click();
-  URL.revokeObjectURL(url);
-}
+// ─── UTILS ────────────────────────────────────────────────────────────────────
 
-function validStatus(s) {
-  return ['new','contacted','qualified','proposal','won','lost'].includes((s||'').toLowerCase())
-    ? s.toLowerCase() : null;
-}
-
-// ─── HELPERS ──────────────────────────────────────────────────────────────────
-function fmtGBP(v) {
-  return new Intl.NumberFormat('en-GB',{style:'currency',currency:'GBP',maximumFractionDigits:0}).format(v);
-}
 function fmtDate(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'});
+  return new Date(iso).toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
 }
 function fmtDateTime(iso) {
   if (!iso) return '—';
-  return new Date(iso).toLocaleString('en-GB',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  return new Date(iso).toLocaleString('en-AU',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'});
 }
 function esc(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 
-// ─── ICONS ───────────────────────────────────────────────────────────────────
-const svgAttrs = (s=20) => `width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"`;
-function usersIcon()  { return `<svg ${svgAttrs()}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; }
-function chartIcon()  { return `<svg ${svgAttrs()}><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>`; }
-function awardIcon()  { return `<svg ${svgAttrs()}><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>`; }
-function trendIcon()  { return `<svg ${svgAttrs()}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>`; }
-function editIcon(s=16)  { return `<svg ${svgAttrs(s)}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`; }
-function trashIcon()  { return `<svg ${svgAttrs(16)}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`; }
+// ─── ICONS ────────────────────────────────────────────────────────────────────
+const S = (s=18) => `width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"`;
+function peopleIcon(){ return `<svg ${S()}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; }
+function sparkIcon() { return `<svg ${S()}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`; }
+function calIcon()   { return `<svg ${S()}><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>`; }
+function checkIcon() { return `<svg ${S()}><polyline points="20 6 9 17 4 12"/></svg>`; }
+function editIcon(s=15){ return `<svg ${S(s)}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`; }
+function trashIcon()  { return `<svg ${S(15)}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`; }
 
-// close modals on backdrop click
+// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
+
 document.getElementById('modal-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
 document.getElementById('detail-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeDetail(); });
 document.getElementById('import-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeImport(); });
-document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDetail();closeImport();} });
+document.addEventListener('keydown', e => {
+  if (e.key==='Escape') { closeModal(); closeDetail(); closeImport(); }
+});
 
-// ─── INIT ─────────────────────────────────────────────────────────────────────
-render();
+// ─── BOOT ─────────────────────────────────────────────────────────────────────
+populateFilters();
+renderTable();
 </script>
 </body>
 </html>
