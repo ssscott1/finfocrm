@@ -1,60 +1,65 @@
 import { NextRequest, NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { getAllLeads, saveLead } from '@/lib/store';
 import { Lead } from '@/lib/types';
+import { randomUUID } from 'crypto';
 
 export async function GET(req: NextRequest) {
-  const db = getDb();
   const { searchParams } = new URL(req.url);
-  const search = searchParams.get('search') || '';
-  const status = searchParams.get('status') || '';
-  const sort = searchParams.get('sort') || 'created_at';
-  const dir = searchParams.get('dir') === 'asc' ? 'ASC' : 'DESC';
+  const search  = (searchParams.get('search') || '').toLowerCase();
+  const status  = searchParams.get('status') || '';
+  const product = searchParams.get('product') || '';
+  const state   = searchParams.get('state') || '';
+  const sort    = searchParams.get('sort') || 'created_at';
+  const dir     = searchParams.get('dir') || 'desc';
 
-  const allowed = ['created_at', 'updated_at', 'name', 'value', 'status'];
-  const sortCol = allowed.includes(sort) ? sort : 'created_at';
+  let leads = await getAllLeads();
 
-  let query = `SELECT * FROM leads WHERE 1=1`;
-  const params: (string | number)[] = [];
+  if (search)  leads = leads.filter(l =>
+    `${l.firstname} ${l.lastname}`.toLowerCase().includes(search) ||
+    (l.email  || '').toLowerCase().includes(search) ||
+    (l.phone  || '').toLowerCase().includes(search)
+  );
+  if (status)  leads = leads.filter(l => l.status  === status);
+  if (product) leads = leads.filter(l => l.product === product);
+  if (state)   leads = leads.filter(l => l.state   === state);
 
-  if (search) {
-    query += ` AND (name LIKE ? OR email LIKE ? OR company LIKE ? OR phone LIKE ?)`;
-    const like = `%${search}%`;
-    params.push(like, like, like, like);
-  }
-  if (status) {
-    query += ` AND status = ?`;
-    params.push(status);
-  }
+  const allowed = ['created_at', 'updated_at', 'firstname', 'product', 'status'];
+  const col = allowed.includes(sort) ? sort : 'created_at';
+  leads.sort((a, b) => {
+    const av = (a as unknown as Record<string, string>)[col] ?? '';
+    const bv = (b as unknown as Record<string, string>)[col] ?? '';
+    return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+  });
 
-  query += ` ORDER BY ${sortCol} ${dir}`;
-
-  const leads = db.prepare(query).all(...params) as Lead[];
   return NextResponse.json(leads);
 }
 
 export async function POST(req: NextRequest) {
-  const db = getDb();
-  const body = await req.json();
-  const { name, email, phone, company, source, status, value, notes } = body;
-
-  if (!name?.trim()) {
-    return NextResponse.json({ error: 'Name is required' }, { status: 400 });
+  const body = await req.json() as Partial<Lead>;
+  if (!body.firstname?.trim() || !body.lastname?.trim()) {
+    return NextResponse.json({ error: 'First and last name are required' }, { status: 400 });
+  }
+  if (!body.product) {
+    return NextResponse.json({ error: 'Product is required' }, { status: 400 });
   }
 
-  const result = db.prepare(`
-    INSERT INTO leads (name, email, phone, company, source, status, value, notes)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-  `).run(
-    name.trim(),
-    email || null,
-    phone || null,
-    company || null,
-    source || 'website',
-    status || 'new',
-    Number(value) || 0,
-    notes || ''
-  );
+  const now = new Date().toISOString();
+  const lead: Lead = {
+    id:         randomUUID(),
+    firstname:  body.firstname.trim(),
+    lastname:   body.lastname.trim(),
+    email:      body.email?.trim() || '',
+    phone:      body.phone?.trim() || '',
+    state:      body.state || '',
+    timeframe:  body.timeframe || '',
+    product:    body.product,
+    status:     body.status || 'New',
+    source:     body.source || 'Finfo Website',
+    notes:      body.notes?.trim() || '',
+    created_at: now,
+    updated_at: now,
+  };
 
-  const lead = db.prepare('SELECT * FROM leads WHERE id = ?').get(result.lastInsertRowid) as Lead;
+  await saveLead(lead);
   return NextResponse.json(lead, { status: 201 });
 }

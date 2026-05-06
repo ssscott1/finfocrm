@@ -1,14 +1,27 @@
 import { NextResponse } from 'next/server';
-import getDb from '@/lib/db';
+import { getAllLeads } from '@/lib/store';
 
 export async function GET() {
-  const db = getDb();
+  const leads = await getAllLeads();
 
-  const total = (db.prepare('SELECT COUNT(*) as n FROM leads').get() as { n: number }).n;
-  const byStatus = db.prepare('SELECT status, COUNT(*) as count FROM leads GROUP BY status').all() as { status: string; count: number }[];
-  const totalValue = (db.prepare('SELECT COALESCE(SUM(value),0) as v FROM leads WHERE status NOT IN (\'lost\')').get() as { v: number }).v;
-  const wonValue = (db.prepare("SELECT COALESCE(SUM(value),0) as v FROM leads WHERE status='won'").get() as { v: number }).v;
-  const recent = db.prepare('SELECT * FROM leads ORDER BY created_at DESC LIMIT 5').all();
+  const total     = leads.length;
+  const newCount  = leads.filter(l => l.status === 'New').length;
+  const completed = leads.filter(l => l.status === 'Completed').length;
 
-  return NextResponse.json({ total, byStatus, totalValue, wonValue, recent });
+  const today = new Date().toDateString();
+  const todayCount = leads.filter(l => new Date(l.created_at).toDateString() === today).length;
+
+  const byProduct: Record<string, number> = {};
+  const byStatus:  Record<string, number> = {};
+  const byState:   Record<string, number> = {};
+
+  for (const l of leads) {
+    byProduct[l.product] = (byProduct[l.product] || 0) + 1;
+    byStatus[l.status]   = (byStatus[l.status]   || 0) + 1;
+    if (l.state) byState[l.state] = (byState[l.state] || 0) + 1;
+  }
+
+  const recent = leads.slice(0, 5);
+
+  return NextResponse.json({ total, newCount, completed, todayCount, byProduct, byStatus, byState, recent });
 }

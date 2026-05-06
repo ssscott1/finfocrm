@@ -7,18 +7,15 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <style>
   body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#f0f4f8}
-  .modal-scroll{scrollbar-width:thin;scrollbar-color:#cbd5e1 transparent}
   @keyframes slideUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
   .slide-up{animation:slideUp 0.18s ease}
-  @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-  .fade-in{animation:fadeIn 0.15s ease}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .spin{animation:spin 0.8s linear infinite}
   input:focus,select:focus,textarea:focus{outline:none}
   .product-card{transition:transform 0.15s,box-shadow 0.15s}
   .product-card:hover{transform:translateY(-2px);box-shadow:0 8px 25px -5px rgba(0,0,0,0.12)}
   .lead-row:hover{background:#f8faff}
-  .pill{transition:all 0.12s}
   ::-webkit-scrollbar{width:6px;height:6px}
-  ::-webkit-scrollbar-track{background:transparent}
   ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:3px}
 </style>
 </head>
@@ -29,7 +26,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
     <div class="flex items-center gap-3">
       <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
-        <span class="text-white font-bold text-base tracking-tight">Fi</span>
+        <span class="text-white font-bold text-base">Fi</span>
       </div>
       <div>
         <span class="text-lg font-bold text-gray-900">Finfo CRM</span>
@@ -37,15 +34,15 @@
       </div>
     </div>
     <div class="flex items-center gap-2">
-      <button onclick="openImport()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-        Import
-      </button>
-      <button onclick="exportCSV()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+      <span id="sync-indicator" class="hidden items-center gap-1.5 text-xs text-gray-400">
+        <svg class="spin" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+        Syncing…
+      </span>
+      <button onclick="exportCSV()" class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Export
+        Export CSV
       </button>
-      <button onclick="openModal('add')" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg transition-colors" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+      <button onclick="openModal('add')" class="flex items-center gap-2 px-4 py-2 text-sm font-semibold text-white rounded-lg" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
         <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg>
         Add Lead
       </button>
@@ -53,11 +50,16 @@
   </div>
 </nav>
 
+<!-- GLOBAL ERROR BANNER -->
+<div id="error-banner" class="hidden bg-red-50 border-b border-red-200 px-4 py-2 text-sm text-red-700 text-center"></div>
+
 <!-- PAGE -->
 <main class="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
   <!-- SUMMARY ROW -->
-  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="summary-row"></div>
+  <div class="grid grid-cols-2 sm:grid-cols-4 gap-3" id="summary-row">
+    <div class="col-span-2 sm:col-span-4 bg-white rounded-xl border border-gray-200 p-6 text-center text-gray-400 text-sm">Loading dashboard…</div>
+  </div>
 
   <!-- PRODUCT BREAKDOWN -->
   <div>
@@ -68,9 +70,8 @@
     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3" id="product-cards"></div>
   </div>
 
-  <!-- LEADS TABLE -->
+  <!-- TABLE -->
   <div class="bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
-    <!-- Table header controls -->
     <div class="px-4 py-3 border-b border-gray-100 flex flex-col sm:flex-row gap-3">
       <div class="relative flex-1">
         <svg class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
@@ -97,8 +98,6 @@
         </select>
       </div>
     </div>
-
-    <!-- Table -->
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
@@ -118,50 +117,44 @@
     <div id="empty-state" class="hidden text-center py-16 text-gray-400">
       <svg class="mx-auto mb-3 text-gray-300" width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
       <p class="font-semibold text-gray-500 text-base">No leads found</p>
-      <p class="text-sm mt-1">Try adjusting your filters or add a new lead</p>
+      <p class="text-sm mt-1">Leads from finfo.com.au will appear here automatically</p>
     </div>
-    <div id="table-footer" class="px-4 py-3 border-t border-gray-100 text-xs text-gray-400"></div>
+    <div id="table-footer" class="px-4 py-3 border-t border-gray-100 text-xs text-gray-400 flex items-center justify-between">
+      <span id="footer-count"></span>
+      <button onclick="loadData()" class="text-blue-500 hover:underline">Refresh</button>
+    </div>
   </div>
-
 </main>
 
-<!-- ═══════════════════════════════════════════════
-     ADD / EDIT MODAL
-═══════════════════════════════════════════════ -->
+<!-- ═══════════════ ADD / EDIT MODAL ═══════════════ -->
 <div id="modal-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto modal-scroll slide-up">
-    <div class="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10 rounded-t-2xl">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl max-h-[92vh] overflow-y-auto slide-up">
+    <div class="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between rounded-t-2xl z-10">
       <h2 id="modal-title" class="text-lg font-bold text-gray-900">Add New Lead</h2>
-      <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+      <button onclick="closeModal()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
     <form id="lead-form" onsubmit="saveLead(event)" class="px-6 py-5 space-y-5">
       <input type="hidden" id="form-id"/>
-
-      <!-- Personal details -->
       <div>
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Customer Details</p>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">First Name <span class="text-red-400">*</span></label>
-            <input id="f-firstname" type="text" required placeholder="Jane"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+            <input id="f-firstname" type="text" required placeholder="Jane" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Last Name <span class="text-red-400">*</span></label>
-            <input id="f-lastname" type="text" required placeholder="Smith"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+            <input id="f-lastname" type="text" required placeholder="Smith" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
           </div>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address <span class="text-red-400">*</span></label>
-            <input id="f-email" type="email" required placeholder="jane@example.com"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+            <label class="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
+            <input id="f-email" type="email" placeholder="jane@example.com" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
-            <input id="f-phone" type="tel" placeholder="04XX XXX XXX"
-              class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
+            <input id="f-phone" type="tel" placeholder="04XX XXX XXX" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"/>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">State</label>
@@ -176,17 +169,13 @@
             <label class="block text-sm font-medium text-gray-700 mb-1">Timeframe</label>
             <select id="f-timeframe" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
               <option value="">— Select —</option>
-              <option>ASAP</option>
-              <option>1–3 months</option>
-              <option>3–6 months</option>
-              <option>6–12 months</option>
+              <option>ASAP</option><option>1–3 months</option>
+              <option>3–6 months</option><option>6–12 months</option>
               <option>Just researching</option>
             </select>
           </div>
         </div>
       </div>
-
-      <!-- Referral / Product -->
       <div>
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Referral Details</p>
         <div class="grid grid-cols-2 gap-3">
@@ -195,76 +184,59 @@
             <select id="f-product" required class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
               <option value="">— Select product —</option>
               <optgroup label="Loans">
-                <option value="Car Loan">Car Loan</option>
-                <option value="Boat Loan">Boat Loan</option>
-                <option value="Personal Loan">Personal Loan</option>
+                <option>Car Loan</option><option>Boat Loan</option><option>Personal Loan</option>
               </optgroup>
               <optgroup label="Property">
-                <option value="Mortgage">Mortgage</option>
+                <option>Mortgage</option>
               </optgroup>
               <optgroup label="Advisory">
-                <option value="Accountant">Accountant</option>
-                <option value="Financial Adviser">Financial Adviser</option>
-                <option value="SMSF Setup">SMSF Setup</option>
+                <option>Accountant</option><option>Financial Adviser</option><option>SMSF Setup</option>
               </optgroup>
               <optgroup label="Protection">
-                <option value="Insurance">Insurance</option>
+                <option>Insurance</option>
               </optgroup>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
             <select id="f-status" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
-              <option value="New">New</option>
-              <option value="Contacted">Contacted</option>
-              <option value="In Progress">In Progress</option>
-              <option value="Referred">Referred</option>
-              <option value="Completed">Completed</option>
-              <option value="Lost">Lost</option>
+              <option>New</option><option>Contacted</option><option>In Progress</option>
+              <option>Referred</option><option>Completed</option><option>Lost</option>
             </select>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-1">Referral Source</label>
             <select id="f-source" class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50">
-              <option value="">— Select —</option>
-              <option>Finfo Website</option>
-              <option>Google</option>
-              <option>Social Media</option>
-              <option>Word of Mouth</option>
-              <option>Email Campaign</option>
-              <option>Partner Referral</option>
-              <option>Other</option>
+              <option>Finfo Website</option><option>Google</option><option>Social Media</option>
+              <option>Word of Mouth</option><option>Email Campaign</option>
+              <option>Partner Referral</option><option>Other</option>
             </select>
           </div>
           <div class="col-span-2">
             <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
-            <textarea id="f-notes" rows="3" placeholder="Any additional information from the form submission…"
+            <textarea id="f-notes" rows="3" placeholder="Notes from the form submission…"
               class="w-full border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50 resize-none"></textarea>
           </div>
         </div>
       </div>
-
       <div id="form-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-2.5 rounded-lg text-sm"></div>
-
       <div class="flex justify-end gap-3 pt-1">
-        <button type="button" onclick="closeModal()" class="px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">Cancel</button>
-        <button type="submit" class="px-6 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">Save Lead</button>
+        <button type="button" onclick="closeModal()" class="px-4 py-2.5 text-sm font-medium text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
+        <button id="form-submit-btn" type="submit" class="px-6 py-2.5 text-sm font-semibold text-white rounded-lg" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">Save Lead</button>
       </div>
     </form>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     LEAD DETAIL MODAL
-═══════════════════════════════════════════════ -->
+<!-- ═══════════════ LEAD DETAIL MODAL ═══════════════ -->
 <div id="detail-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto modal-scroll slide-up">
-    <div class="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between z-10 rounded-t-2xl">
+  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[92vh] overflow-y-auto slide-up">
+    <div class="sticky top-0 bg-white px-6 py-4 border-b border-gray-100 flex items-center justify-between rounded-t-2xl z-10">
       <div>
         <h2 id="detail-name" class="text-lg font-bold text-gray-900"></h2>
-        <p id="detail-sub" class="text-xs text-gray-400 mt-0.5"></p>
+        <p id="detail-sub"  class="text-xs text-gray-400 mt-0.5"></p>
       </div>
-      <button onclick="closeDetail()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors">
+      <button onclick="closeDetail()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100">
         <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
       </button>
     </div>
@@ -272,108 +244,113 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     IMPORT MODAL
-═══════════════════════════════════════════════ -->
-<div id="import-overlay" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50">
-  <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md slide-up">
-    <div class="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
-      <h2 class="text-lg font-bold text-gray-900">Import CSV</h2>
-      <button onclick="closeImport()" class="w-8 h-8 flex items-center justify-center rounded-full text-gray-400 hover:bg-gray-100 transition-colors">
-        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg>
-      </button>
-    </div>
-    <div class="px-6 py-5 space-y-4">
-      <p class="text-sm text-gray-600">CSV columns: <code class="bg-gray-100 px-1.5 py-0.5 rounded text-xs">firstname, lastname, email, phone, state, timeframe, product, status, source, notes</code></p>
-      <input type="file" id="csv-file" accept=".csv"
-        class="block w-full text-sm text-gray-500 file:mr-3 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"/>
-      <div id="import-error" class="hidden bg-red-50 border border-red-200 text-red-600 px-3 py-2 rounded-lg text-sm"></div>
-      <div class="flex justify-end gap-3">
-        <button onclick="closeImport()" class="px-4 py-2.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">Cancel</button>
-        <button onclick="doImport()" class="px-5 py-2.5 text-sm font-semibold text-white rounded-lg" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">Import</button>
-      </div>
-    </div>
-  </div>
-</div>
-
 <script>
-// ─── CONSTANTS ────────────────────────────────────────────────────────────────
+// ─── Config ──────────────────────────────────────────────────────────────────
+// When served from the Next.js app at /dashboard.html, API is on the same origin.
+// Override this if you host the HTML file elsewhere.
+const API_BASE = '';
 
 const PRODUCTS = [
-  { id:'Car Loan',          group:'Loans',    color:'#3b82f6', bg:'#eff6ff', text:'#1d4ed8' },
-  { id:'Boat Loan',         group:'Loans',    color:'#0ea5e9', bg:'#f0f9ff', text:'#0369a1' },
-  { id:'Personal Loan',     group:'Loans',    color:'#6366f1', bg:'#eef2ff', text:'#4338ca' },
-  { id:'Mortgage',          group:'Property', color:'#8b5cf6', bg:'#f5f3ff', text:'#6d28d9' },
-  { id:'Accountant',        group:'Advisory', color:'#f59e0b', bg:'#fffbeb', text:'#b45309' },
-  { id:'Financial Adviser', group:'Advisory', color:'#f97316', bg:'#fff7ed', text:'#c2410c' },
-  { id:'SMSF Setup',        group:'Advisory', color:'#10b981', bg:'#ecfdf5', text:'#047857' },
-  { id:'Insurance',         group:'Protection',color:'#ef4444',bg:'#fef2f2', text:'#b91c1c' },
+  { id:'Car Loan',          group:'Loans',      color:'#3b82f6', bg:'#eff6ff', text:'#1d4ed8' },
+  { id:'Boat Loan',         group:'Loans',      color:'#0ea5e9', bg:'#f0f9ff', text:'#0369a1' },
+  { id:'Personal Loan',     group:'Loans',      color:'#6366f1', bg:'#eef2ff', text:'#4338ca' },
+  { id:'Mortgage',          group:'Property',   color:'#8b5cf6', bg:'#f5f3ff', text:'#6d28d9' },
+  { id:'Accountant',        group:'Advisory',   color:'#f59e0b', bg:'#fffbeb', text:'#b45309' },
+  { id:'Financial Adviser', group:'Advisory',   color:'#f97316', bg:'#fff7ed', text:'#c2410c' },
+  { id:'SMSF Setup',        group:'Advisory',   color:'#10b981', bg:'#ecfdf5', text:'#047857' },
+  { id:'Insurance',         group:'Protection', color:'#ef4444', bg:'#fef2f2', text:'#b91c1c' },
 ];
-
-const STATUSES = [
-  { id:'New',         color:'bg-blue-100 text-blue-700' },
-  { id:'Contacted',   color:'bg-yellow-100 text-yellow-700' },
-  { id:'In Progress', color:'bg-purple-100 text-purple-700' },
-  { id:'Referred',    color:'bg-orange-100 text-orange-700' },
-  { id:'Completed',   color:'bg-green-100 text-green-700' },
-  { id:'Lost',        color:'bg-red-100 text-red-700' },
-];
-
+const STATUSES = ['New','Contacted','In Progress','Referred','Completed','Lost'];
+const STATUS_COLORS = {
+  'New':'bg-blue-100 text-blue-700','Contacted':'bg-yellow-100 text-yellow-700',
+  'In Progress':'bg-purple-100 text-purple-700','Referred':'bg-orange-100 text-orange-700',
+  'Completed':'bg-green-100 text-green-700','Lost':'bg-red-100 text-red-700',
+};
 const AU_STATES = ['NSW','VIC','QLD','SA','WA','TAS','NT','ACT'];
+const ACT_TYPES = [
+  {id:'note',icon:'📝',label:'Note'},{id:'call',icon:'📞',label:'Call'},
+  {id:'email',icon:'✉️',label:'Email'},{id:'meeting',icon:'🤝',label:'Meeting'},
+];
 
-const KEY  = 'finfo_crm_v2_leads';
-const AKEY = 'finfo_crm_v2_acts';
+// ─── State ───────────────────────────────────────────────────────────────────
+let allLeads = [];
+let currentDetailId = null;
+let _actType = 'note';
 
-// ─── STORAGE ──────────────────────────────────────────────────────────────────
-
-function load()       { try { return JSON.parse(localStorage.getItem(KEY)  || '[]'); } catch { return []; } }
-function save(d)      { localStorage.setItem(KEY,  JSON.stringify(d)); }
-function loadActs()   { try { return JSON.parse(localStorage.getItem(AKEY) || '{}'); } catch { return {}; } }
-function saveActs(d)  { localStorage.setItem(AKEY, JSON.stringify(d)); }
-function uid()        { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-
-function prodMeta(id) { return PRODUCTS.find(p => p.id === id) || { color:'#6b7280', bg:'#f9fafb', text:'#374151', group:'' }; }
-function statusMeta(id){ return STATUSES.find(s => s.id === id) || { color:'bg-gray-100 text-gray-600' }; }
-
-// ─── POPULATE FILTERS ────────────────────────────────────────────────────────
-
-function populateFilters() {
-  const fp = document.getElementById('filter-product');
-  PRODUCTS.forEach(p => { const o = new Option(p.id, p.id); fp.appendChild(o); });
-  const fs = document.getElementById('filter-status');
-  STATUSES.forEach(s => { const o = new Option(s.id, s.id); fs.appendChild(o); });
-  const fst = document.getElementById('filter-state');
-  AU_STATES.forEach(s => { const o = new Option(s, s); fst.appendChild(o); });
+// ─── API helpers ──────────────────────────────────────────────────────────────
+function syncing(on) {
+  const el = document.getElementById('sync-indicator');
+  el.classList.toggle('hidden', !on);
+  el.classList.toggle('flex', on);
+}
+function showError(msg) {
+  const el = document.getElementById('error-banner');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  setTimeout(() => el.classList.add('hidden'), 6000);
 }
 
-// ─── DASHBOARD ───────────────────────────────────────────────────────────────
+async function api(path, opts = {}) {
+  syncing(true);
+  try {
+    const res = await fetch(API_BASE + path, {
+      headers: { 'Content-Type': 'application/json' },
+      ...opts,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `HTTP ${res.status}`);
+    }
+    return res.status === 204 ? null : res.json();
+  } finally {
+    syncing(false);
+  }
+}
 
+// ─── Data loading ─────────────────────────────────────────────────────────────
+async function loadData() {
+  try {
+    allLeads = await api('/api/leads');
+    renderDashboard();
+    renderTable();
+  } catch (e) {
+    showError('Could not load leads: ' + e.message);
+  }
+}
+
+// ─── Populate filters ─────────────────────────────────────────────────────────
+function populateFilters() {
+  const fp = document.getElementById('filter-product');
+  PRODUCTS.forEach(p => fp.appendChild(new Option(p.id, p.id)));
+  const fs = document.getElementById('filter-status');
+  STATUSES.forEach(s => fs.appendChild(new Option(s, s)));
+  const fst = document.getElementById('filter-state');
+  AU_STATES.forEach(s => fst.appendChild(new Option(s, s)));
+}
+
+// ─── Dashboard ────────────────────────────────────────────────────────────────
 function renderDashboard() {
-  const leads = load();
-  const total = leads.length;
-  const newCount = leads.filter(l => l.status === 'New').length;
-  const todayStr = new Date().toDateString();
-  const todayCount = leads.filter(l => new Date(l.created_at).toDateString() === todayStr).length;
-  const completedCount = leads.filter(l => l.status === 'Completed').length;
+  const total     = allLeads.length;
+  const newCount  = allLeads.filter(l => l.status === 'New').length;
+  const completed = allLeads.filter(l => l.status === 'Completed').length;
+  const today     = new Date().toDateString();
+  const todayCount= allLeads.filter(l => new Date(l.created_at).toDateString() === today).length;
 
   document.getElementById('summary-row').innerHTML = [
-    { label:'Total Leads',    value: total,          icon: peopleIcon(),   bg:'bg-blue-50',   ic:'text-blue-500' },
-    { label:'New Leads',      value: newCount,        icon: sparkIcon(),    bg:'bg-purple-50', ic:'text-purple-500' },
-    { label:'Added Today',    value: todayCount,      icon: calIcon(),      bg:'bg-green-50',  ic:'text-green-500' },
-    { label:'Completed',      value: completedCount,  icon: checkIcon(),    bg:'bg-orange-50', ic:'text-orange-500' },
+    { label:'Total Leads',  value: total,       icon: peopleIcon(),  bg:'bg-blue-50',   ic:'text-blue-500' },
+    { label:'New Leads',    value: newCount,     icon: sparkIcon(),   bg:'bg-purple-50', ic:'text-purple-500' },
+    { label:'Added Today',  value: todayCount,   icon: calIcon(),     bg:'bg-green-50',  ic:'text-green-500' },
+    { label:'Completed',    value: completed,    icon: checkIcon(),   bg:'bg-orange-50', ic:'text-orange-500' },
   ].map(s => `
     <div class="bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
       <div class="w-10 h-10 ${s.bg} rounded-xl flex items-center justify-center mb-3 ${s.ic}">${s.icon}</div>
       <p class="text-2xl font-bold text-gray-900">${s.value}</p>
       <p class="text-xs text-gray-500 mt-0.5 font-medium">${s.label}</p>
-    </div>
-  `).join('');
+    </div>`).join('');
 
-  // Product breakdown cards
   const counts = {};
-  leads.forEach(l => counts[l.product] = (counts[l.product]||0)+1);
+  allLeads.forEach(l => counts[l.product] = (counts[l.product]||0)+1);
   document.getElementById('breakdown-total').textContent = `${total} total lead${total!==1?'s':''}`;
-
   document.getElementById('product-cards').innerHTML = PRODUCTS.map(p => {
     const n = counts[p.id] || 0;
     const pct = total > 0 ? Math.round(n/total*100) : 0;
@@ -385,25 +362,21 @@ function renderDashboard() {
         <p class="text-xl font-bold text-gray-900">${n}</p>
         <p class="text-xs font-medium text-gray-500 leading-tight mt-0.5">${p.id}</p>
         <div class="mt-2 h-1 rounded-full bg-gray-100 overflow-hidden">
-          <div class="h-full rounded-full transition-all" style="width:${pct}%;background:${p.color}"></div>
+          <div class="h-full rounded-full" style="width:${pct}%;background:${p.color}"></div>
         </div>
-      </button>
-    `;
+      </button>`;
   }).join('');
 }
 
 function filterByProduct(pid) {
   document.getElementById('filter-product').value = pid;
   renderTable();
-  document.getElementById('leads-tbody').closest('.bg-white').scrollIntoView({ behavior:'smooth', block:'start' });
+  document.querySelector('.bg-white.rounded-2xl').scrollIntoView({ behavior:'smooth', block:'start' });
 }
 
-// ─── TABLE ────────────────────────────────────────────────────────────────────
-
+// ─── Table ────────────────────────────────────────────────────────────────────
 function renderTable() {
-  renderDashboard();
-
-  let leads = load();
+  let leads = [...allLeads];
   const q       = document.getElementById('search-input').value.toLowerCase().trim();
   const prod    = document.getElementById('filter-product').value;
   const status  = document.getElementById('filter-status').value;
@@ -421,20 +394,17 @@ function renderTable() {
 
   const [sf, sd] = sort.split('_');
   leads.sort((a,b) => {
-    let av = sf==='date' ? a.created_at : sf==='name' ? `${a.firstname} ${a.lastname}` : a.product;
-    let bv = sf==='date' ? b.created_at : sf==='name' ? `${b.firstname} ${b.lastname}` : b.product;
-    if (av < bv) return sd==='asc' ? -1 : 1;
-    if (av > bv) return sd==='asc' ? 1 : -1;
-    return 0;
+    const av = sf==='date'?a.created_at : sf==='name'?`${a.firstname} ${a.lastname}`:a.product;
+    const bv = sf==='date'?b.created_at : sf==='name'?`${b.firstname} ${b.lastname}`:b.product;
+    return sd==='asc' ? av.localeCompare(bv) : bv.localeCompare(av);
   });
 
   const tbody = document.getElementById('leads-tbody');
   const empty = document.getElementById('empty-state');
-  const footer = document.getElementById('table-footer');
+  const footer = document.getElementById('footer-count');
 
   if (leads.length === 0) {
-    tbody.innerHTML = '';
-    empty.classList.remove('hidden');
+    tbody.innerHTML = ''; empty.classList.remove('hidden');
     footer.textContent = '';
     return;
   }
@@ -442,8 +412,8 @@ function renderTable() {
   footer.textContent = `Showing ${leads.length} lead${leads.length!==1?'s':''}`;
 
   tbody.innerHTML = leads.map(l => {
-    const pm = prodMeta(l.product);
-    const sm = statusMeta(l.status);
+    const pm = PRODUCTS.find(p=>p.id===l.product) || {color:'#6b7280',bg:'#f9fafb',text:'#374151'};
+    const sc = STATUS_COLORS[l.status] || 'bg-gray-100 text-gray-600';
     return `
       <tr class="lead-row cursor-pointer" onclick="openDetail('${l.id}')">
         <td class="px-4 py-3.5">
@@ -466,7 +436,7 @@ function renderTable() {
           </span>
         </td>
         <td class="px-4 py-3.5">
-          <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${sm.color}">${esc(l.status)}</span>
+          <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold ${sc}">${esc(l.status)}</span>
         </td>
         <td class="px-4 py-3.5 text-sm text-gray-500 hidden md:table-cell">${l.state||'—'}</td>
         <td class="px-4 py-3.5 text-sm text-gray-500 hidden lg:table-cell">${esc(l.timeframe||'—')}</td>
@@ -474,82 +444,69 @@ function renderTable() {
         <td class="px-4 py-3.5 text-right" onclick="event.stopPropagation()">
           <div class="flex items-center gap-1 justify-end">
             <button onclick="openModal('edit','${l.id}')" title="Edit"
-              class="p-1.5 text-gray-300 hover:text-blue-500 rounded-lg hover:bg-blue-50 transition-colors">
-              ${editIcon()}</button>
-            <button onclick="deleteLead('${l.id}')" title="Delete"
-              class="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50 transition-colors">
-              ${trashIcon()}</button>
+              class="p-1.5 text-gray-300 hover:text-blue-500 rounded-lg hover:bg-blue-50">${editIcon()}</button>
+            <button onclick="confirmDelete('${l.id}')" title="Delete"
+              class="p-1.5 text-gray-300 hover:text-red-500 rounded-lg hover:bg-red-50">${trashIcon()}</button>
           </div>
         </td>
-      </tr>
-    `;
+      </tr>`;
   }).join('');
 }
 
 // ─── CRUD ─────────────────────────────────────────────────────────────────────
-
 function openModal(mode, id) {
   document.getElementById('modal-title').textContent = mode==='add' ? 'Add New Lead' : 'Edit Lead';
   document.getElementById('form-error').classList.add('hidden');
   document.getElementById('form-id').value = id || '';
 
-  const lead = id ? load().find(l => l.id === id) : null;
-  const fields = ['firstname','lastname','email','phone','state','timeframe','product','status','source','notes'];
-  fields.forEach(f => {
+  const lead = id ? allLeads.find(l => l.id === id) : null;
+  ['firstname','lastname','email','phone','state','timeframe','product','status','source','notes'].forEach(f => {
     const el = document.getElementById('f-'+f);
     if (el) el.value = lead ? (lead[f]||'') : (f==='status'?'New': f==='source'?'Finfo Website':'');
   });
   document.getElementById('modal-overlay').classList.remove('hidden');
   setTimeout(() => document.getElementById('f-firstname').focus(), 80);
 }
-
 function closeModal() { document.getElementById('modal-overlay').classList.add('hidden'); }
 
-function saveLead(e) {
+async function saveLead(e) {
   e.preventDefault();
-  const id = document.getElementById('form-id').value;
+  const id        = document.getElementById('form-id').value;
   const firstname = document.getElementById('f-firstname').value.trim();
   const lastname  = document.getElementById('f-lastname').value.trim();
   const product   = document.getElementById('f-product').value;
-
-  if (!firstname || !lastname) return showFormErr('First and last name are required.');
+  if (!firstname||!lastname) return showFormErr('First and last name are required.');
   if (!product) return showFormErr('Please select a product.');
 
-  const leads = load();
-  const now   = new Date().toISOString();
-  const lead  = {
-    id:         id || uid(),
-    firstname,
-    lastname,
-    email:      document.getElementById('f-email').value.trim(),
-    phone:      document.getElementById('f-phone').value.trim(),
-    state:      document.getElementById('f-state').value,
-    timeframe:  document.getElementById('f-timeframe').value,
-    product,
-    status:     document.getElementById('f-status').value || 'New',
-    source:     document.getElementById('f-source').value,
-    notes:      document.getElementById('f-notes').value.trim(),
-    created_at: id ? (leads.find(l=>l.id===id)?.created_at||now) : now,
-    updated_at: now,
+  const btn = document.getElementById('form-submit-btn');
+  btn.textContent = 'Saving…'; btn.disabled = true;
+
+  const payload = {
+    firstname, lastname, product,
+    email:     document.getElementById('f-email').value.trim(),
+    phone:     document.getElementById('f-phone').value.trim(),
+    state:     document.getElementById('f-state').value,
+    timeframe: document.getElementById('f-timeframe').value,
+    status:    document.getElementById('f-status').value,
+    source:    document.getElementById('f-source').value,
+    notes:     document.getElementById('f-notes').value.trim(),
   };
 
-  if (id) {
-    const idx = leads.findIndex(l => l.id===id);
-    if (idx >= 0) leads[idx] = lead; else leads.unshift(lead);
-  } else {
-    leads.unshift(lead);
+  try {
+    const saved = await api(id ? `/api/leads/${id}` : '/api/leads', {
+      method: id ? 'PUT' : 'POST',
+      body: JSON.stringify(payload),
+    });
+    if (id) allLeads = allLeads.map(l => l.id===id ? saved : l);
+    else    allLeads = [saved, ...allLeads];
+    closeModal();
+    renderDashboard();
+    renderTable();
+  } catch(err) {
+    showFormErr(err.message);
+  } finally {
+    btn.textContent = 'Save Lead'; btn.disabled = false;
   }
-  save(leads);
-  closeModal();
-  renderTable();
-}
-
-function deleteLead(id) {
-  if (!confirm('Delete this lead? This cannot be undone.')) return;
-  save(load().filter(l => l.id !== id));
-  const acts = loadActs(); delete acts[id]; saveActs(acts);
-  if (currentDetailId === id) closeDetail();
-  renderTable();
 }
 
 function showFormErr(msg) {
@@ -557,68 +514,64 @@ function showFormErr(msg) {
   el.textContent = msg; el.classList.remove('hidden');
 }
 
-// ─── DETAIL ───────────────────────────────────────────────────────────────────
+async function confirmDelete(id) {
+  if (!confirm('Delete this lead? This cannot be undone.')) return;
+  try {
+    await api(`/api/leads/${id}`, { method: 'DELETE' });
+    allLeads = allLeads.filter(l => l.id !== id);
+    if (currentDetailId === id) closeDetail();
+    renderDashboard(); renderTable();
+  } catch(e) { showError('Could not delete lead: ' + e.message); }
+}
 
-let currentDetailId = null;
-let _actType = 'note';
-
-const ACT_TYPES = [
-  { id:'note',    icon:'📝', label:'Note'    },
-  { id:'call',    icon:'📞', label:'Call'    },
-  { id:'email',   icon:'✉️',  label:'Email'   },
-  { id:'meeting', icon:'🤝', label:'Meeting' },
-];
-
-function openDetail(id) {
-  currentDetailId = id;
-  _actType = 'note';
-  renderDetail(id);
+// ─── Lead detail ──────────────────────────────────────────────────────────────
+async function openDetail(id) {
+  currentDetailId = id; _actType = 'note';
   document.getElementById('detail-overlay').classList.remove('hidden');
+  await renderDetail(id);
 }
 function closeDetail() {
   document.getElementById('detail-overlay').classList.add('hidden');
   currentDetailId = null;
 }
 
-function renderDetail(id) {
-  const lead = load().find(l => l.id === id);
+async function renderDetail(id) {
+  const lead = allLeads.find(l => l.id === id);
   if (!lead) return;
-  const pm = prodMeta(lead.product);
-  const sm = statusMeta(lead.status);
-  const acts = (loadActs()[id] || []).slice().reverse();
+  const pm = PRODUCTS.find(p=>p.id===lead.product)||{color:'#6b7280',bg:'#f9fafb',text:'#374151'};
+  const sc = STATUS_COLORS[lead.status]||'bg-gray-100 text-gray-600';
 
   document.getElementById('detail-name').textContent = `${lead.firstname} ${lead.lastname}`;
   document.getElementById('detail-sub').textContent  = `Received ${fmtDate(lead.created_at)} · ${lead.product}`;
 
-  document.getElementById('detail-body').innerHTML = `
+  let acts = [];
+  try { acts = await api(`/api/leads/${id}/activities`); } catch {}
 
-    <!-- Product + status badges -->
+  document.getElementById('detail-body').innerHTML = `
     <div class="flex flex-wrap gap-2 items-center">
       <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-semibold"
         style="background:${pm.bg};color:${pm.text}">
-        <span class="w-2 h-2 rounded-full" style="background:${pm.color}"></span>
-        ${esc(lead.product)}
+        <span class="w-2 h-2 rounded-full" style="background:${pm.color}"></span>${esc(lead.product)}
       </span>
-      <span class="inline-flex px-3 py-1.5 rounded-full text-sm font-semibold ${sm.color}">${esc(lead.status)}</span>
+      <span class="inline-flex px-3 py-1.5 rounded-full text-sm font-semibold ${sc}">${esc(lead.status)}</span>
       <button onclick="openModal('edit','${id}');closeDetail()"
-        class="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors">
+        class="ml-auto flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold text-blue-600 border border-blue-200 rounded-lg hover:bg-blue-50">
         ${editIcon(14)} Edit Lead
       </button>
     </div>
 
-    <!-- Customer info grid -->
     <div class="bg-gray-50 rounded-xl p-4 grid grid-cols-2 gap-3">
       <div>
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Email</p>
         ${lead.email
           ? `<a href="mailto:${esc(lead.email)}" class="text-sm text-blue-600 hover:underline">${esc(lead.email)}</a>`
-          : `<p class="text-sm text-gray-400">—</p>`}
+          : '<p class="text-sm text-gray-400">—</p>'}
       </div>
       <div>
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">Phone</p>
         ${lead.phone
           ? `<a href="tel:${esc(lead.phone)}" class="text-sm text-blue-600 hover:underline">${esc(lead.phone)}</a>`
-          : `<p class="text-sm text-gray-400">—</p>`}
+          : '<p class="text-sm text-gray-400">—</p>'}
       </div>
       <div>
         <p class="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-0.5">State</p>
@@ -638,30 +591,25 @@ function renderDetail(id) {
       </div>
     </div>
 
-    <!-- Notes -->
     ${lead.notes ? `
     <div>
-      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Form Notes</p>
+      <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Notes from Form</p>
       <p class="text-sm text-gray-700 whitespace-pre-wrap bg-amber-50 border border-amber-100 rounded-xl p-3">${esc(lead.notes)}</p>
     </div>` : ''}
 
-    <!-- Status change -->
     <div>
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Update Status</p>
       <div class="flex flex-wrap gap-2">
         ${STATUSES.map(s => `
-          <button onclick="changeStatus('${id}','${s.id}')"
+          <button onclick="changeStatus('${id}','${s}')"
             class="px-3 py-1.5 text-xs font-semibold rounded-full transition-all ${
-              lead.status===s.id
-                ? s.color + ' ring-2 ring-offset-1 ring-current'
+              lead.status===s
+                ? (STATUS_COLORS[s]||'bg-gray-100 text-gray-600') + ' ring-2 ring-offset-1 ring-current'
                 : 'bg-gray-100 text-gray-500 hover:bg-gray-200'
-            }">
-            ${s.id}
-          </button>`).join('')}
+            }">${s}</button>`).join('')}
       </div>
     </div>
 
-    <!-- Activity log -->
     <div>
       <p class="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-3">Activity Log</p>
       <div class="flex gap-2 mb-3 flex-wrap">
@@ -676,7 +624,7 @@ function renderDetail(id) {
           class="flex-1 border border-gray-200 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-blue-400 bg-gray-50"
           onkeydown="if(event.key==='Enter'){addActivity('${id}');event.preventDefault()}"/>
         <button onclick="addActivity('${id}')"
-          class="px-4 py-2.5 text-sm font-semibold text-white rounded-lg transition-colors" style="background:#3b82f6">Add</button>
+          class="px-4 py-2.5 text-sm font-semibold text-white rounded-lg" style="background:#3b82f6">Add</button>
       </div>
       <div id="act-list" class="space-y-3">
         ${acts.length===0
@@ -684,14 +632,13 @@ function renderDetail(id) {
           : acts.map(a => `
             <div class="flex gap-3 text-sm bg-gray-50 rounded-xl p-3">
               <span class="text-lg leading-none mt-0.5">${ACT_TYPES.find(t=>t.id===a.type)?.icon||'📝'}</span>
-              <div class="flex-1 min-w-0">
+              <div>
                 <p class="text-gray-800">${esc(a.content)}</p>
                 <p class="text-xs text-gray-400 mt-1">${fmtDateTime(a.created_at)}</p>
               </div>
             </div>`).join('')}
       </div>
-    </div>
-  `;
+    </div>`;
 }
 
 function setActType(t) {
@@ -700,113 +647,52 @@ function setActType(t) {
     const btn = document.getElementById('atype-'+at.id);
     if (btn) btn.className = `px-3 py-1 text-xs rounded-full font-semibold transition-all ${at.id===t?'bg-blue-600 text-white':'bg-gray-100 text-gray-600 hover:bg-gray-200'}`;
   });
-  const input = document.getElementById('act-input');
-  if (input) input.placeholder = `Log a ${t}…`;
+  const inp = document.getElementById('act-input');
+  if (inp) inp.placeholder = `Log a ${t}…`;
 }
 
-function addActivity(id) {
+async function addActivity(id) {
   const input = document.getElementById('act-input');
   const content = input?.value.trim();
   if (!content) return;
-  const acts = loadActs();
-  if (!acts[id]) acts[id] = [];
-  acts[id].push({ id:uid(), type:_actType, content, created_at:new Date().toISOString() });
-  saveActs(acts);
-  input.value = '';
-  renderDetail(id);
+  try {
+    await api(`/api/leads/${id}/activities`, {
+      method: 'POST',
+      body: JSON.stringify({ type: _actType, content }),
+    });
+    input.value = '';
+    await renderDetail(id);
+  } catch(e) { showError('Could not save activity: ' + e.message); }
 }
 
-function changeStatus(id, status) {
-  const leads = load();
-  const idx = leads.findIndex(l => l.id===id);
-  if (idx>=0) { leads[idx].status = status; leads[idx].updated_at = new Date().toISOString(); }
-  save(leads);
-  renderDetail(id);
-  renderTable();
+async function changeStatus(id, status) {
+  const lead = allLeads.find(l => l.id === id);
+  if (!lead) return;
+  try {
+    const updated = await api(`/api/leads/${id}`, {
+      method: 'PUT',
+      body: JSON.stringify({ ...lead, status }),
+    });
+    allLeads = allLeads.map(l => l.id===id ? updated : l);
+    renderDashboard(); renderTable();
+    await renderDetail(id);
+  } catch(e) { showError('Could not update status: ' + e.message); }
 }
 
-// ─── IMPORT / EXPORT ─────────────────────────────────────────────────────────
-
-function openImport()  { document.getElementById('import-overlay').classList.remove('hidden'); }
-function closeImport() { document.getElementById('import-overlay').classList.add('hidden'); }
-
-function doImport() {
-  const file = document.getElementById('csv-file').files[0];
-  if (!file) { showImportErr('Please select a CSV file.'); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    try {
-      const rows = parseCSV(e.target.result);
-      if (!rows.length) { showImportErr('No data rows found.'); return; }
-      const leads = load();
-      const now = new Date().toISOString();
-      let n = 0;
-      rows.forEach(r => {
-        const fn = (r.firstname||r['First Name']||'').trim();
-        const ln = (r.lastname||r['Last Name']||'').trim();
-        if (!fn && !ln) return;
-        leads.unshift({
-          id: uid(),
-          firstname: fn,
-          lastname:  ln,
-          email:     (r.email||r['Email']||'').trim(),
-          phone:     (r.phone||r['Phone']||'').trim(),
-          state:     (r.state||r['State']||'').trim(),
-          timeframe: (r.timeframe||r['Timeframe']||'').trim(),
-          product:   (r.product||r['Product']||'').trim(),
-          status:    (r.status||r['Status']||'New').trim(),
-          source:    (r.source||r['Source']||'').trim(),
-          notes:     (r.notes||r['Notes']||'').trim(),
-          created_at: now, updated_at: now,
-        });
-        n++;
-      });
-      save(leads);
-      closeImport();
-      renderTable();
-      alert(`✓ Imported ${n} lead${n!==1?'s':''} successfully.`);
-    } catch(err) { showImportErr('Could not parse CSV: ' + err.message); }
-  };
-  reader.readAsText(file);
-}
-
-function showImportErr(msg) {
-  const el = document.getElementById('import-error');
-  el.textContent = msg; el.classList.remove('hidden');
-}
-
+// ─── Export CSV ───────────────────────────────────────────────────────────────
 function exportCSV() {
-  const leads = load();
-  if (!leads.length) { alert('No leads to export.'); return; }
-  const headers = ['firstname','lastname','email','phone','state','timeframe','product','status','source','notes','created_at','updated_at'];
-  const rows = leads.map(l => headers.map(h => `"${(l[h]||'').toString().replace(/"/g,'""')}"`).join(','));
+  if (!allLeads.length) { alert('No leads to export.'); return; }
+  const headers = ['firstname','lastname','email','phone','state','timeframe','product','status','source','notes','created_at'];
+  const rows = allLeads.map(l => headers.map(h => `"${(l[h]||'').toString().replace(/"/g,'""')}"`).join(','));
   const csv = [headers.join(','), ...rows].join('\n');
   const a = Object.assign(document.createElement('a'), {
     href: URL.createObjectURL(new Blob([csv],{type:'text/csv'})),
-    download: `finfo-leads-${new Date().toISOString().slice(0,10)}.csv`
+    download: `finfo-leads-${new Date().toISOString().slice(0,10)}.csv`,
   });
   a.click(); URL.revokeObjectURL(a.href);
 }
 
-function parseCSV(text) {
-  const lines = text.trim().split(/\r?\n/);
-  if (lines.length < 2) return [];
-  const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g,''));
-  return lines.slice(1).map(line => {
-    const vals = splitLine(line);
-    const obj = {};
-    headers.forEach((h,i) => obj[h] = (vals[i]||'').replace(/^"|"$/g,'').trim());
-    return obj;
-  });
-}
-function splitLine(line) {
-  const res=[]; let cur='', inQ=false;
-  for(const c of line){ if(c==='"'){inQ=!inQ;continue;} if(c===','&&!inQ){res.push(cur);cur='';continue;} cur+=c; }
-  res.push(cur); return res;
-}
-
-// ─── UTILS ────────────────────────────────────────────────────────────────────
-
+// ─── Utils ────────────────────────────────────────────────────────────────────
 function fmtDate(iso) {
   if (!iso) return '—';
   return new Date(iso).toLocaleDateString('en-AU',{day:'2-digit',month:'short',year:'numeric'});
@@ -818,8 +704,6 @@ function fmtDateTime(iso) {
 function esc(s) {
   return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
-
-// ─── ICONS ────────────────────────────────────────────────────────────────────
 const S = (s=18) => `width="${s}" height="${s}" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"`;
 function peopleIcon(){ return `<svg ${S()}><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>`; }
 function sparkIcon() { return `<svg ${S()}><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>`; }
@@ -828,18 +712,17 @@ function checkIcon() { return `<svg ${S()}><polyline points="20 6 9 17 4 12"/></
 function editIcon(s=15){ return `<svg ${S(s)}><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`; }
 function trashIcon()  { return `<svg ${S(15)}><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>`; }
 
-// ─── EVENT LISTENERS ──────────────────────────────────────────────────────────
-
+// ─── Event listeners ──────────────────────────────────────────────────────────
 document.getElementById('modal-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeModal(); });
 document.getElementById('detail-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeDetail(); });
-document.getElementById('import-overlay').addEventListener('click', e => { if(e.target===e.currentTarget) closeImport(); });
-document.addEventListener('keydown', e => {
-  if (e.key==='Escape') { closeModal(); closeDetail(); closeImport(); }
-});
+document.addEventListener('keydown', e => { if(e.key==='Escape'){closeModal();closeDetail();} });
 
-// ─── BOOT ─────────────────────────────────────────────────────────────────────
+// Auto-refresh every 60 seconds to pick up new leads from the website
+setInterval(loadData, 60000);
+
+// ─── Boot ─────────────────────────────────────────────────────────────────────
 populateFilters();
-renderTable();
+loadData();
 </script>
 </body>
 </html>
