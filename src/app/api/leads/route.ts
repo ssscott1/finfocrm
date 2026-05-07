@@ -17,7 +17,9 @@ export async function GET(req: NextRequest) {
   if (search)  leads = leads.filter(l =>
     `${l.firstname} ${l.lastname}`.toLowerCase().includes(search) ||
     (l.email  || '').toLowerCase().includes(search) ||
-    (l.phone  || '').toLowerCase().includes(search)
+    (l.phone  || '').toLowerCase().includes(search) ||
+    (l.business_name || '').toLowerCase().includes(search) ||
+    (l.accountant_name || '').toLowerCase().includes(search)
   );
   if (status)  leads = leads.filter(l => l.status  === status);
   if (product) leads = leads.filter(l => l.product === product);
@@ -36,8 +38,8 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json() as Partial<Lead>;
-  if (!body.firstname?.trim() || !body.lastname?.trim()) {
-    return NextResponse.json({ error: 'First and last name are required' }, { status: 400 });
+  if (!body.firstname?.trim()) {
+    return NextResponse.json({ error: 'Contact name is required' }, { status: 400 });
   }
   if (!body.product) {
     return NextResponse.json({ error: 'Product is required' }, { status: 400 });
@@ -47,7 +49,7 @@ export async function POST(req: NextRequest) {
   const lead: Lead = {
     id:         randomUUID(),
     firstname:  body.firstname.trim(),
-    lastname:   body.lastname.trim(),
+    lastname:   body.lastname?.trim() || '',
     email:      body.email?.trim() || '',
     phone:      body.phone?.trim() || '',
     state:      body.state || '',
@@ -56,6 +58,13 @@ export async function POST(req: NextRequest) {
     status:     body.status || 'New',
     source:     body.source || 'Finfo Website',
     notes:      body.notes?.trim() || '',
+    business_name:    body.business_name?.trim() || '',
+    abn:              body.abn?.replace(/\s/g, '') || '',
+    years_trading:    body.years_trading || '',
+    accountancy:      body.accountancy?.trim() || '',
+    accountant_name:  body.accountant_name?.trim() || '',
+    accountant_email: body.accountant_email?.trim() || '',
+    finance_amount:   body.finance_amount || '',
     created_at: now,
     updated_at: now,
   };

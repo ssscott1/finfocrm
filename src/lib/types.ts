@@ -13,6 +13,14 @@ export interface Lead {
   status:     LeadStatus;
   source:     string;
   notes:      string;
+  // Business finance fields (from accountant referral form)
+  business_name?:    string;
+  abn?:              string;
+  years_trading?:    string;
+  accountancy?:      string;
+  accountant_name?:  string;
+  accountant_email?: string;
+  finance_amount?:   string;
   created_at: string;
   updated_at: string;
 }
@@ -26,6 +34,10 @@ export interface Activity {
 }
 
 export const PRODUCTS = [
+  { id: 'Car Finance',       group: 'Business Finance', color: '#2563eb', bg: '#eff6ff', text: '#1e40af' },
+  { id: 'Truck Finance',     group: 'Business Finance', color: '#ea580c', bg: '#fff7ed', text: '#c2410c' },
+  { id: 'Machinery Finance', group: 'Business Finance', color: '#059669', bg: '#ecfdf5', text: '#047857' },
+  { id: 'Cashflow Finance',  group: 'Business Finance', color: '#7c3aed', bg: '#f5f3ff', text: '#6d28d9' },
   { id: 'Car Loan',          group: 'Loans',      color: '#3b82f6', bg: '#eff6ff', text: '#1d4ed8' },
   { id: 'Boat Loan',         group: 'Loans',      color: '#0ea5e9', bg: '#f0f9ff', text: '#0369a1' },
   { id: 'Personal Loan',     group: 'Loans',      color: '#6366f1', bg: '#eef2ff', text: '#4338ca' },
