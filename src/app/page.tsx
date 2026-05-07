@@ -222,7 +222,7 @@ export default function HomePage() {
               style={{ padding: '10px 20px', borderRadius: 10, background: 'linear-gradient(135deg,#1e40af,#3b82f6)', color: '#fff', fontWeight: 700, fontSize: 14, textDecoration: 'none', display: 'inline-block' }}>
               Apply Now
             </a>
-            <a href="/dashboard.html"
+            <a href="https://equipmentfinance.netlify.app/dashboard.html"
               style={{ padding: '9px 16px', borderRadius: 10, border: '1px solid #e2e8f0', color: '#64748b', fontWeight: 600, fontSize: 13, textDecoration: 'none', display: 'inline-block', background: '#fff' }}>
               CRM Login
             </a>
@@ -635,7 +635,7 @@ export default function HomePage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 16, alignItems: 'center' }}>
-            <a href="/dashboard.html" style={{ color: '#64748b', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>CRM Login</a>
+            <a href="https://equipmentfinance.netlify.app/dashboard.html" style={{ color: '#64748b', fontSize: 13, textDecoration: 'none', fontWeight: 500 }}>CRM Login</a>
             <span style={{ color: '#1e293b' }}>|</span>
             <span style={{ color: '#475569', fontSize: 13 }}>© {new Date().getFullYear()} Finfo Finance Pty Ltd</span>
           </div>
