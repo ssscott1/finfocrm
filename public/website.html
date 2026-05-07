@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Finfo Finance — Fast Business Finance</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<style>
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f8fafc; }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+  .spin { animation: spin 0.8s linear infinite; }
+  .fade-up { animation: fadeUp 0.22s ease; }
+  .pulse { animation: pulse 2s ease-in-out infinite; }
+
+  input[type=range] {
+    -webkit-appearance: none;
+    height: 6px;
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+    width: 100%;
+  }
+  input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 6px rgba(0,0,0,0.25);
+    cursor: pointer;
+  }
+  ::-webkit-scrollbar { width: 5px; }
+  ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+  .tab-btn { transition: all 0.15s ease; }
+  .tab-btn:hover { transform: translateY(-1px); }
+  .hero-bg {
+    background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 50%, #1e40af 100%);
+  }
+  .gradient-text {
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .card { transition: transform 0.15s, box-shadow 0.15s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(0,0,0,0.10); }
+  input:focus, select:focus, textarea:focus { outline: 2px solid #3b82f6; outline-offset: 1px; }
+
+  @media (max-width: 640px) {
+    .calc-cols { grid-template-columns: 1fr !important; }
+    .how-cols  { grid-template-columns: 1fr !important; }
+    .why-cols  { grid-template-columns: 1fr 1fr !important; }
+    .form-cols { grid-template-columns: 1fr !important; }
+    .hero-btns { flex-direction: column; align-items: center; }
+    .hero-badges { display: none !important; }
+    .nav-apply-label { display: none; }
+  }
+</style>
+</head>
+<body class="min-h-screen">
+
+<!-- ══════════════════════════ NAV ══════════════════════════ -->
+<nav class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+  <div class="max-w-6xl mx-auto px-4 sm:px-6 h-17 flex items-center justify-between" style="height:68px">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+        style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+        <span class="text-white font-black text-lg" style="letter-spacing:-1px">Fi</span>
+      </div>
+      <div>
+        <div class="font-extrabold text-gray-900 text-lg" style="letter-spacing:-0.4px">Finfo Finance</div>
+        <div class="text-xs text-gray-400" style="margin-top:-1px">Fast Business Finance</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-2">
+      <a href="#calculator"
+        class="hidden sm:inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-blue-700 border border-blue-200 rounded-xl hover:bg-blue-50">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="10" x2="16" y2="10"/><line x1="8" y1="14" x2="12" y2="14"/></svg>
+        Calculator
+      </a>
+      <a href="#apply"
+        class="flex items-center gap-2 px-4 py-2 text-sm font-bold text-white rounded-xl"
+        style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        <span class="nav-apply-label">Apply Now</span>
+        <span class="sm:hidden">Apply</span>
+      </a>
+      <a href="dashboard.html"
+        class="hidden sm:flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        CRM Login
+      </a>
+    </div>
+  </div>
+</nav>
+
+<!-- ══════════════════════════ HERO ══════════════════════════ -->
+<section class="hero-bg relative overflow-hidden" style="padding: 80px 24px 72px">
+  <div class="absolute inset-0 pointer-events-none" style="opacity:0.07;background:radial-gradient(circle at 20% 50%,#60a5fa 0%,transparent 50%),radial-gradient(circle at 80% 50%,#818cf8 0%,transparent 50%)"></div>
+  <div class="max-w-3xl mx-auto text-center relative">
+    <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-6"
+      style="background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.18)">
+      <span class="w-2 h-2 rounded-full pulse" style="background:#34d399"></span>
+      <span class="text-gray-200 text-sm font-semibold">Referred by your accountant? Apply in minutes.</span>
+    </div>
+    <h1 class="text-white font-black mb-5" style="font-size:clamp(32px,5vw,54px);line-height:1.14;letter-spacing:-1px">
+      Fast Finance for<br>
+      <span class="gradient-text">Australian Businesses</span>
+    </h1>
+    <p class="mb-9" style="color:#94a3b8;font-size:clamp(15px,2vw,19px);max-width:540px;margin-left:auto;margin-right:auto;line-height:1.65">
+      Specialist finance for cars, trucks, machinery and cashflow — structured by finance experts who understand your industry.
+    </p>
+    <div class="flex gap-3 justify-center flex-wrap hero-btns mb-10">
+      <a href="#calculator"
+        class="px-7 py-3.5 rounded-xl text-white font-bold text-base"
+        style="background:linear-gradient(135deg,#3b82f6,#6366f1)">
+        Calculate Repayments
+      </a>
+      <a href="#apply"
+        class="px-7 py-3.5 rounded-xl text-white font-bold text-base"
+        style="border:1px solid rgba(255,255,255,0.22);background:rgba(255,255,255,0.09)">
+        Submit a Referral
+      </a>
+    </div>
+    <div class="flex gap-6 justify-center flex-wrap hero-badges" style="margin-top:8px">
+      <div class="flex items-center gap-2"><span>🔒</span><span class="text-gray-400 text-sm font-medium">Licensed &amp; Regulated</span></div>
+      <div class="flex items-center gap-2"><span>⚡</span><span class="text-gray-400 text-sm font-medium">24–48hr Approvals</span></div>
+      <div class="flex items-center gap-2"><span>🇦🇺</span><span class="text-gray-400 text-sm font-medium">Australian Owned</span></div>
+      <div class="flex items-center gap-2"><span>💼</span><span class="text-gray-400 text-sm font-medium">500+ Businesses Financed</span></div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ HOW IT WORKS ══════════════════════════ -->
+<section class="bg-white py-14 px-6">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-center text-3xl font-extrabold text-gray-900 mb-2" style="letter-spacing:-0.4px">How It Works</h2>
+    <p class="text-center text-gray-500 mb-10 text-base">Accountants refer their clients in 3 simple steps</p>
+    <div class="grid grid-cols-3 gap-7 how-cols">
+      <div id="step1" class="card text-center p-8 rounded-2xl border border-gray-200" style="background:#f8fafc">
+        <div class="w-13 h-13 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-extrabold text-xl"
+          style="width:52px;height:52px;background:linear-gradient(135deg,#1e40af,#3b82f6)">1</div>
+        <h3 class="text-base font-bold text-gray-900 mb-2">Use the Calculator</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Get an indicative repayment estimate for your client using our live calculators below.</p>
+      </div>
+      <div id="step2" class="card text-center p-8 rounded-2xl border border-gray-200" style="background:#f8fafc">
+        <div class="w-13 h-13 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-extrabold text-xl"
+          style="width:52px;height:52px;background:linear-gradient(135deg,#1e40af,#3b82f6)">2</div>
+        <h3 class="text-base font-bold text-gray-900 mb-2">Submit the Referral</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Complete the short referral form with business and contact details — takes under 2 minutes.</p>
+      </div>
+      <div id="step3" class="card text-center p-8 rounded-2xl border border-gray-200" style="background:#f8fafc">
+        <div class="w-13 h-13 rounded-full mx-auto mb-4 flex items-center justify-center text-white font-extrabold text-xl"
+          style="width:52px;height:52px;background:linear-gradient(135deg,#1e40af,#3b82f6)">3</div>
+        <h3 class="text-base font-bold text-gray-900 mb-2">We Call Your Client</h3>
+        <p class="text-gray-500 text-sm leading-relaxed">Our finance consultants contact the business directly and manage the full approval process.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ CALCULATOR ══════════════════════════ -->
+<section id="calculator" style="background:#f1f5f9;padding:64px 24px">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-center text-3xl font-extrabold text-gray-900 mb-2" style="letter-spacing:-0.4px">Finance Calculator</h2>
+    <p class="text-center text-gray-500 mb-9 text-base">Indicative repayments — select a finance type to get started</p>
+
+    <!-- Tabs -->
+    <div class="flex flex-wrap gap-2 justify-center mb-7" id="tab-row"></div>
+
+    <!-- Calculator card -->
+    <div id="calc-card" class="bg-white rounded-2xl shadow-sm overflow-hidden" style="border:2px solid #bfdbfe">
+      <!-- Card header -->
+      <div id="calc-header" class="flex items-center gap-3 px-7 py-5" style="background:#eff6ff;border-bottom:1px solid #bfdbfe">
+        <div id="calc-icon" style="color:#2563eb"></div>
+        <div>
+          <h3 id="calc-title" class="text-xl font-extrabold" style="color:#1e40af;margin:0"></h3>
+          <p id="calc-tagline" class="text-sm mt-0.5" style="color:#3b82f6;opacity:0.8;margin:0"></p>
+        </div>
+      </div>
+
+      <!-- Calculator body -->
+      <div class="calc-cols grid p-7 gap-8" style="grid-template-columns:1fr 1fr">
+
+        <!-- Left: sliders -->
+        <div class="space-y-7">
+          <!-- Amount -->
+          <div>
+            <div class="flex justify-between items-center mb-2.5">
+              <label class="text-sm font-semibold text-gray-700">Finance Amount</label>
+              <span id="disp-amount" class="text-lg font-extrabold" style="color:#2563eb"></span>
+            </div>
+            <input type="range" id="range-amount" oninput="updateCalc()" style="background:#bfdbfe"/>
+            <div class="flex justify-between mt-1">
+              <span id="disp-min" class="text-xs text-gray-400"></span>
+              <span id="disp-max" class="text-xs text-gray-400"></span>
+            </div>
+          </div>
+
+          <!-- Term -->
+          <div>
+            <div class="flex justify-between items-center mb-2.5">
+              <label class="text-sm font-semibold text-gray-700">Loan Term</label>
+              <span id="disp-term" class="text-lg font-extrabold" style="color:#2563eb"></span>
+            </div>
+            <input type="range" id="range-term" oninput="updateCalc()" style="background:#bfdbfe"/>
+            <div class="flex justify-between mt-1">
+              <span id="disp-min-term" class="text-xs text-gray-400"></span>
+              <span id="disp-max-term" class="text-xs text-gray-400"></span>
+            </div>
+          </div>
+
+          <!-- Rate notice -->
+          <div id="rate-notice" class="rounded-xl px-4 py-3 text-xs font-semibold" style="background:#eff6ff;color:#1e40af;border:1px solid #bfdbfe"></div>
+
+          <!-- Features -->
+          <div id="features-grid" class="grid grid-cols-2 gap-2"></div>
+        </div>
+
+        <!-- Right: result -->
+        <div class="flex flex-col items-center justify-center gap-4">
+          <div id="result-box" class="w-full rounded-2xl text-center px-6 py-9" style="background:#eff6ff;border:2px solid #bfdbfe">
+            <p class="text-xs font-bold uppercase tracking-widest mb-2" style="color:#1e40af">Est. Monthly Repayment</p>
+            <p id="disp-monthly" class="font-black leading-none mb-1" style="font-size:46px;color:#2563eb;letter-spacing:-1px"></p>
+            <p class="text-xs" style="color:#94a3b8">per month (indicative only)</p>
+          </div>
+
+          <div class="w-full grid grid-cols-2 gap-3">
+            <div class="rounded-xl p-4 text-center border border-gray-200" style="background:#f8fafc">
+              <p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Total Repaid</p>
+              <p id="disp-total" class="text-lg font-extrabold text-gray-900"></p>
+            </div>
+            <div class="rounded-xl p-4 text-center border border-gray-200" style="background:#f8fafc">
+              <p class="text-xs font-bold uppercase tracking-wide text-gray-400 mb-1">Total Interest</p>
+              <p id="disp-interest" class="text-lg font-extrabold text-gray-900"></p>
+            </div>
+          </div>
+
+          <button id="apply-btn" onclick="applyWithCalc()"
+            class="w-full py-4 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2"
+            style="background:linear-gradient(135deg,#2563eb,#2563eb)">
+            Apply with These Details
+            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+          </button>
+          <p class="text-xs text-center text-gray-400">Estimates are indicative only. Final rates subject to assessment.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ APPLICATION FORM ══════════════════════════ -->
+<section id="apply" class="bg-white py-16 px-6">
+  <div class="max-w-2xl mx-auto">
+    <div class="text-center mb-10">
+      <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-4"
+        style="background:#eff6ff;border:1px solid #bfdbfe">
+        <span style="color:#2563eb;font-size:13px;font-weight:700">⚡ Fast Approval Referral</span>
+      </div>
+      <h2 class="text-3xl font-extrabold text-gray-900 mb-2" style="letter-spacing:-0.4px">Submit a Client Referral</h2>
+      <p class="text-gray-500 text-base max-w-md mx-auto">
+        Complete the details below and a finance consultant will contact your client within one business day.
+      </p>
+    </div>
+
+    <!-- Success state -->
+    <div id="success-msg" class="hidden text-center rounded-2xl py-14 px-8 fade-up" style="border:2px solid #a7f3d0;background:#ecfdf5">
+      <div class="w-16 h-16 rounded-full mx-auto mb-5 flex items-center justify-center" style="background:#059669">
+        <svg width="30" height="30" fill="none" stroke="#fff" stroke-width="2.5" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <h3 class="text-2xl font-extrabold mb-2" style="color:#064e3b">Referral Submitted!</h3>
+      <p class="text-base mb-6" style="color:#065f46">Thank you. A finance consultant will contact your client within one business day.</p>
+      <button onclick="resetForm()"
+        class="px-7 py-3 rounded-xl text-white font-bold text-base border-0 cursor-pointer"
+        style="background:#059669">Submit Another Referral</button>
+    </div>
+
+    <!-- Form -->
+    <form id="referral-form" class="rounded-2xl border border-gray-200 p-8" style="background:#f8fafc" onsubmit="submitForm(event)">
+
+      <!-- Business Details -->
+      <div class="mb-8">
+        <div class="flex items-center gap-3 mb-5 pb-3 border-b border-gray-200">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+            <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+          </div>
+          <h3 class="text-sm font-bold text-gray-900">Client Business Details</h3>
+        </div>
+        <div class="form-cols grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Business Name <span class="text-red-400">*</span></label>
+            <input type="text" id="f-business-name" name="business_name" required placeholder="Acme Pty Ltd" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">ABN <span class="text-red-400">*</span></label>
+            <input type="text" id="f-abn" name="abn" required placeholder="12 345 678 901" maxlength="14" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Years in Business <span class="text-red-400">*</span></label>
+            <select id="f-years" name="years_trading" required class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a">
+              <option value="">— Select —</option>
+              <option>Less than 1 year</option>
+              <option>1–2 years</option>
+              <option>2–5 years</option>
+              <option>5–10 years</option>
+              <option>10+ years</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Contact Person <span class="text-red-400">*</span> <span class="text-gray-400 font-normal text-xs">— client's name for our call</span></label>
+            <input type="text" id="f-contact" name="contact" required placeholder="Jane Smith" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Contact Phone <span class="text-red-400">*</span></label>
+            <input type="tel" id="f-phone" name="phone" required placeholder="04XX XXX XXX" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finance Details -->
+      <div class="mb-8">
+        <div class="flex items-center gap-3 mb-5 pb-3 border-b border-gray-200">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+            <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+          </div>
+          <h3 class="text-sm font-bold text-gray-900">Finance Details</h3>
+        </div>
+        <div class="form-cols grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Finance Type <span class="text-red-400">*</span></label>
+            <select id="f-product" name="product" required class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a">
+              <option value="">— Select type —</option>
+              <option value="Car Finance">Car Finance</option>
+              <option value="Truck Finance">Truck Finance</option>
+              <option value="Machinery Finance">Machinery Finance</option>
+              <option value="Cashflow Finance">Cashflow Finance</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Approximate Amount <span class="text-gray-400 font-normal text-xs">— from calculator or estimate</span></label>
+            <input type="text" id="f-amount" name="finance_amount" placeholder="e.g. $150,000" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+          <div class="col-span-2">
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Additional Notes <span class="text-gray-400 font-normal text-xs">— any relevant details for our team</span></label>
+            <textarea id="f-notes" name="notes" rows="3" placeholder="e.g. urgency, specific asset, special circumstances…"
+              class="w-full resize-y" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Accountant Details -->
+      <div class="mb-6">
+        <div class="flex items-center gap-3 mb-5 pb-3 border-b border-gray-200">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+            style="background:linear-gradient(135deg,#f59e0b,#f97316)">
+            <svg width="14" height="14" fill="none" stroke="#fff" stroke-width="2.2" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+          </div>
+          <h3 class="text-sm font-bold text-gray-900">Referring Accountant</h3>
+        </div>
+        <div class="form-cols grid grid-cols-2 gap-4">
+          <div class="col-span-2">
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Accountancy Firm <span class="text-red-400">*</span></label>
+            <input type="text" id="f-accountancy" name="accountancy" required placeholder="Smith &amp; Associates Accounting" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Accountant Name <span class="text-red-400">*</span></label>
+            <input type="text" id="f-accountant-name" name="accountant_name" required placeholder="John Smith" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-1.5">Accountant Email <span class="text-red-400">*</span></label>
+            <input type="email" id="f-accountant-email" name="accountant_email" required placeholder="john@smithaccounting.com.au" class="w-full" style="padding:10px 14px;border:1px solid #d1d5db;border-radius:10px;font-size:14px;background:#fff;color:#0f172a"/>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error -->
+      <div id="form-error" class="hidden rounded-xl px-4 py-3 mb-4 text-sm font-medium" style="background:#fef2f2;border:1px solid #fecaca;color:#dc2626"></div>
+
+      <!-- Submit -->
+      <button type="submit" id="submit-btn"
+        class="w-full py-4 rounded-xl text-white font-bold text-base border-0 cursor-pointer flex items-center justify-center gap-2"
+        style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+        Submit Fast Approval Referral
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <p class="text-center mt-3 text-xs" style="color:#94a3b8">
+        By submitting you confirm the client has consented to being contacted by Finfo Finance.
+      </p>
+    </form>
+  </div>
+</section>
+
+<!-- ══════════════════════════ WHY FINFO ══════════════════════════ -->
+<section class="py-16 px-6" style="background:linear-gradient(135deg,#0f172a,#1e3a8a)">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-center text-3xl font-extrabold text-white mb-2" style="letter-spacing:-0.4px">Why Accountants Choose Finfo</h2>
+    <p class="text-center mb-10" style="color:#94a3b8;font-size:16px">We make you look good in front of your clients</p>
+    <div class="why-cols grid grid-cols-4 gap-5">
+      <div class="rounded-2xl p-7" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)">
+        <div class="text-3xl mb-3">⚡</div>
+        <h3 class="text-base font-bold text-white mb-2">Fast Approvals</h3>
+        <p class="text-sm leading-relaxed" style="color:#94a3b8">Most applications approved within 24–48 hours so your clients can move quickly.</p>
+      </div>
+      <div class="rounded-2xl p-7" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)">
+        <div class="text-3xl mb-3">🎯</div>
+        <h3 class="text-base font-bold text-white mb-2">Specialist Lenders</h3>
+        <p class="text-sm leading-relaxed" style="color:#94a3b8">Access to over 40 lenders including banks, non-banks and specialty funders.</p>
+      </div>
+      <div class="rounded-2xl p-7" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)">
+        <div class="text-3xl mb-3">🤝</div>
+        <h3 class="text-base font-bold text-white mb-2">Referral Partnership</h3>
+        <p class="text-sm leading-relaxed" style="color:#94a3b8">Every referral is tracked and you receive updates on your client's progress.</p>
+      </div>
+      <div class="rounded-2xl p-7" style="background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.1)">
+        <div class="text-3xl mb-3">🛡️</div>
+        <h3 class="text-base font-bold text-white mb-2">Compliance First</h3>
+        <p class="text-sm leading-relaxed" style="color:#94a3b8">Fully licensed and compliant. We protect you and your clients throughout.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══════════════════════════ FOOTER ══════════════════════════ -->
+<footer class="py-8 px-6 border-t" style="background:#0f172a;border-color:#1e293b">
+  <div class="max-w-5xl mx-auto flex flex-wrap items-center justify-between gap-4">
+    <div>
+      <div class="flex items-center gap-2.5 mb-2">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center" style="background:linear-gradient(135deg,#1e40af,#3b82f6)">
+          <span class="text-white font-black text-sm">Fi</span>
+        </div>
+        <span class="text-white font-bold">Finfo Finance</span>
+      </div>
+      <p class="text-xs leading-relaxed max-w-sm" style="color:#475569">
+        Indicative repayments are estimates only and do not constitute a credit offer. Final rates and approvals subject to full credit assessment. Australian Credit Licence holder.
+      </p>
+    </div>
+    <div class="flex gap-4 items-center">
+      <a href="dashboard.html" class="text-sm font-medium hover:underline" style="color:#64748b;text-decoration:none">CRM Login</a>
+      <span style="color:#1e293b">|</span>
+      <span class="text-sm" style="color:#475569">© <span id="footer-year"></span> Finfo Finance Pty Ltd</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════════════════
+//  Finance configuration
+// ═══════════════════════════════════════════════════════════
+
+const FINANCE = {
+  car: {
+    label: 'Car Finance', product: 'Car Finance',
+    tagline: 'Business vehicles, SUVs & utes — new or used',
+    color: '#2563eb', bg: '#eff6ff', border: '#bfdbfe', text: '#1e40af',
+    min: 10000, max: 200000, step: 5000, defaultAmount: 50000,
+    minTerm: 12, maxTerm: 84, defaultTerm: 60, termStep: 12, rate: 7.49,
+    features: ['24–48 hour approval', 'Up to 100% finance', 'Fixed repayments', 'New & used vehicles'],
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h14l4 4v4a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/><path d="M5 9h9l2 4H5V9z"/></svg>`,
+  },
+  truck: {
+    label: 'Truck Finance', product: 'Truck Finance',
+    tagline: 'Light, medium & heavy commercial trucks',
+    color: '#ea580c', bg: '#fff7ed', border: '#fed7aa', text: '#c2410c',
+    min: 20000, max: 500000, step: 10000, defaultAmount: 150000,
+    minTerm: 12, maxTerm: 84, defaultTerm: 60, termStep: 12, rate: 8.49,
+    features: ['All truck categories', 'Chattel mortgage available', 'Up to 7-year terms', 'GST benefits'],
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="1" y="3" width="15" height="13" rx="1"/><path d="M16 8h4l3 3v5h-7V8z"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>`,
+  },
+  machinery: {
+    label: 'Machinery Finance', product: 'Machinery Finance',
+    tagline: 'Earthmoving, farming & industrial equipment',
+    color: '#059669', bg: '#ecfdf5', border: '#a7f3d0', text: '#047857',
+    min: 20000, max: 1000000, step: 10000, defaultAmount: 250000,
+    minTerm: 12, maxTerm: 84, defaultTerm: 60, termStep: 12, rate: 7.99,
+    features: ['New & used equipment', 'Operating lease options', 'Tax-effective structures', 'Balloon payment options'],
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>`,
+  },
+  cashflow: {
+    label: 'Cashflow Finance', product: 'Cashflow Finance',
+    tagline: 'Invoice finance & working capital solutions',
+    color: '#7c3aed', bg: '#f5f3ff', border: '#ddd6fe', text: '#6d28d9',
+    min: 20000, max: 500000, step: 10000, defaultAmount: 100000,
+    minTerm: 3, maxTerm: 24, defaultTerm: 12, termStep: 1, rate: 9.99,
+    features: ['Unlock debtor book value', 'Flexible drawdown', 'No property security', 'Approval in days'],
+    icon: `<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>`,
+  },
+};
+
+// Per-tab saved state
+const state = {
+  tab: 'car',
+  amounts: { car: 50000, truck: 150000, machinery: 250000, cashflow: 100000 },
+  terms:   { car: 60,    truck: 60,     machinery: 60,     cashflow: 12    },
+};
+
+// ═══════════════════════════════════════════════════════════
+//  Calculator logic
+// ═══════════════════════════════════════════════════════════
+
+function pmt(P, annualRate, months) {
+  if (annualRate === 0) return P / months;
+  const r = annualRate / 100 / 12;
+  return P * r * Math.pow(1 + r, months) / (Math.pow(1 + r, months) - 1);
+}
+
+function aud(n) {
+  return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 0 }).format(n);
+}
+
+function audFull(n) {
+  return new Intl.NumberFormat('en-AU', { style: 'currency', currency: 'AUD', maximumFractionDigits: 2 }).format(n);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Tab rendering
+// ═══════════════════════════════════════════════════════════
+
+function buildTabs() {
+  const row = document.getElementById('tab-row');
+  row.innerHTML = Object.entries(FINANCE).map(([key, cfg]) => `
+    <button class="tab-btn flex items-center gap-2 px-5 py-2.5 rounded-full font-bold text-sm"
+      id="tab-${key}" onclick="switchTab('${key}')"
+      style="border:2px solid #e2e8f0;background:#fff;color:#64748b;cursor:pointer">
+      <span class="tab-icon-${key}">${cfg.icon}</span>
+      ${cfg.label}
+    </button>
+  `).join('');
+}
+
+function switchTab(key) {
+  // Save current sliders
+  const prevCfg = FINANCE[state.tab];
+  state.amounts[state.tab] = +document.getElementById('range-amount').value;
+  state.terms[state.tab]   = +document.getElementById('range-term').value;
+
+  state.tab = key;
+  renderCalc();
+}
+
+function renderCalc() {
+  const key = state.tab;
+  const cfg = FINANCE[key];
+  const amount = state.amounts[key];
+  const term   = state.terms[key];
+
+  // Update active tab button
+  Object.keys(FINANCE).forEach(k => {
+    const btn = document.getElementById('tab-' + k);
+    const c = FINANCE[k];
+    if (k === key) {
+      btn.style.background = c.bg;
+      btn.style.borderColor = c.color;
+      btn.style.color = c.text;
+      btn.querySelectorAll('svg').forEach(s => s.style.color = c.color);
+    } else {
+      btn.style.background = '#fff';
+      btn.style.borderColor = '#e2e8f0';
+      btn.style.color = '#64748b';
+      btn.querySelectorAll('svg').forEach(s => s.style.color = '#94a3b8');
+    }
+  });
+
+  // Update card chrome
+  document.getElementById('calc-card').style.borderColor = cfg.border;
+  const header = document.getElementById('calc-header');
+  header.style.background = cfg.bg;
+  header.style.borderBottomColor = cfg.border;
+  document.getElementById('calc-icon').innerHTML = cfg.icon;
+  document.getElementById('calc-icon').style.color = cfg.color;
+  document.getElementById('calc-title').textContent = cfg.label;
+  document.getElementById('calc-title').style.color = cfg.text;
+  document.getElementById('calc-tagline').textContent = cfg.tagline;
+  document.getElementById('calc-tagline').style.color = cfg.color;
+
+  // Amount slider
+  const rAmt = document.getElementById('range-amount');
+  rAmt.min = cfg.min; rAmt.max = cfg.max; rAmt.step = cfg.step; rAmt.value = amount;
+  rAmt.style.background = cfg.border;
+  rAmt.style.setProperty('accent-color', cfg.color);
+  document.getElementById('disp-min').textContent = aud(cfg.min);
+  document.getElementById('disp-max').textContent = aud(cfg.max);
+
+  // Term slider
+  const rTerm = document.getElementById('range-term');
+  rTerm.min = cfg.minTerm; rTerm.max = cfg.maxTerm; rTerm.step = cfg.termStep; rTerm.value = term;
+  rTerm.style.background = cfg.border;
+  rTerm.style.setProperty('accent-color', cfg.color);
+  document.getElementById('disp-min-term').textContent = `${cfg.minTerm} mo`;
+  document.getElementById('disp-max-term').textContent = `${cfg.maxTerm} mo`;
+
+  // Rate / colour accents
+  document.getElementById('rate-notice').textContent = `Indicative Rate: ${cfg.rate}% p.a. · Comparison rate may vary`;
+  document.getElementById('rate-notice').style.background = cfg.bg;
+  document.getElementById('rate-notice').style.color = cfg.text;
+  document.getElementById('rate-notice').style.borderColor = cfg.border;
+
+  // Features
+  document.getElementById('features-grid').innerHTML = cfg.features.map(f => `
+    <div class="flex items-center gap-1.5 text-sm" style="color:#475569">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="${cfg.color}" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      ${f}
+    </div>`).join('');
+
+  // Result box
+  document.getElementById('result-box').style.background = cfg.bg;
+  document.getElementById('result-box').style.borderColor = cfg.border;
+  document.getElementById('result-box').querySelector('p').style.color = cfg.text;
+  document.getElementById('disp-monthly').style.color = cfg.color;
+
+  // Apply button
+  document.getElementById('apply-btn').style.background = `linear-gradient(135deg,${cfg.color},${cfg.color}dd)`;
+
+  // Colours on amount/term labels
+  document.getElementById('disp-amount').style.color = cfg.color;
+  document.getElementById('disp-term').style.color = cfg.color;
+
+  updateCalc();
+}
+
+function updateCalc() {
+  const key = state.tab;
+  const cfg = FINANCE[key];
+  const amount = +document.getElementById('range-amount').value;
+  const term   = +document.getElementById('range-term').value;
+
+  state.amounts[key] = amount;
+  state.terms[key]   = term;
+
+  const monthly = pmt(amount, cfg.rate, term);
+  const total = monthly * term;
+  const interest = total - amount;
+
+  document.getElementById('disp-amount').textContent  = aud(amount);
+  document.getElementById('disp-term').textContent    = `${term} months`;
+  document.getElementById('disp-monthly').textContent = audFull(monthly);
+  document.getElementById('disp-total').textContent   = aud(total);
+  document.getElementById('disp-interest').textContent= aud(interest);
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Form
+// ═══════════════════════════════════════════════════════════
+
+function applyWithCalc() {
+  const key = state.tab;
+  const cfg = FINANCE[key];
+  const amount = state.amounts[key];
+  document.getElementById('f-product').value = cfg.product;
+  document.getElementById('f-amount').value  = aud(amount);
+  document.getElementById('apply').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function submitForm(e) {
+  e.preventDefault();
+  document.getElementById('form-error').classList.add('hidden');
+
+  const abn = document.getElementById('f-abn').value.replace(/\s/g, '');
+  if (!/^\d{11}$/.test(abn)) {
+    showFormErr('ABN must be 11 digits. Please check and try again.');
+    return;
+  }
+
+  const contactRaw = document.getElementById('f-contact').value.trim();
+  if (!contactRaw) { showFormErr('Contact person name is required.'); return; }
+
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = true;
+  btn.innerHTML = `<svg class="spin" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> Submitting Referral…`;
+
+  const parts = contactRaw.split(/\s+/);
+  const firstname = parts[0];
+  const lastname  = parts.slice(1).join(' ') || '-';
+
+  const payload = {
+    firstname,
+    lastname,
+    email:            document.getElementById('f-accountant-email').value.trim(),
+    phone:            document.getElementById('f-phone').value.trim(),
+    product:          document.getElementById('f-product').value,
+    source:           'Accountant Referral',
+    status:           'New',
+    state:            '',
+    timeframe:        '',
+    notes:            document.getElementById('f-notes').value.trim(),
+    business_name:    document.getElementById('f-business-name').value.trim(),
+    abn,
+    years_trading:    document.getElementById('f-years').value,
+    accountancy:      document.getElementById('f-accountancy').value.trim(),
+    accountant_name:  document.getElementById('f-accountant-name').value.trim(),
+    accountant_email: document.getElementById('f-accountant-email').value.trim(),
+    finance_amount:   document.getElementById('f-amount').value.trim(),
+  };
+
+  try {
+    const res = await fetch('/api/leads', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload),
+    });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      throw new Error(d.error || 'Submission failed. Please try again.');
+    }
+    document.getElementById('referral-form').classList.add('hidden');
+    document.getElementById('success-msg').classList.remove('hidden');
+    document.getElementById('success-msg').classList.add('fade-up');
+    document.getElementById('apply').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  } catch (err) {
+    showFormErr(err.message || 'Something went wrong. Please try again.');
+    btn.disabled = false;
+    btn.innerHTML = `Submit Fast Approval Referral <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+  }
+}
+
+function showFormErr(msg) {
+  const el = document.getElementById('form-error');
+  el.textContent = msg;
+  el.classList.remove('hidden');
+  el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function resetForm() {
+  document.getElementById('referral-form').reset();
+  document.getElementById('referral-form').classList.remove('hidden');
+  document.getElementById('success-msg').classList.add('hidden');
+  document.getElementById('success-msg').classList.remove('fade-up');
+  document.getElementById('form-error').classList.add('hidden');
+  const btn = document.getElementById('submit-btn');
+  btn.disabled = false;
+  btn.innerHTML = `Submit Fast Approval Referral <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
+}
+
+// ═══════════════════════════════════════════════════════════
+//  Boot
+// ═══════════════════════════════════════════════════════════
+
+document.getElementById('footer-year').textContent = new Date().getFullYear();
+buildTabs();
+renderCalc();
+</script>
+</body>
+</html>
