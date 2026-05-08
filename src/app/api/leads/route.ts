@@ -3,6 +3,16 @@ import { getAllLeads, saveLead } from '@/lib/store';
 import { Lead } from '@/lib/types';
 import { randomUUID } from 'crypto';
 
+const CORS = {
+  'Access-Control-Allow-Origin':  '*',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+  'Access-Control-Allow-Headers': 'Content-Type',
+};
+
+export async function OPTIONS() {
+  return new NextResponse(null, { status: 204, headers: CORS });
+}
+
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const search  = (searchParams.get('search') || '').toLowerCase();
@@ -33,16 +43,16 @@ export async function GET(req: NextRequest) {
     return dir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
   });
 
-  return NextResponse.json(leads);
+  return NextResponse.json(leads, { headers: CORS });
 }
 
 export async function POST(req: NextRequest) {
   const body = await req.json() as Partial<Lead>;
   if (!body.firstname?.trim()) {
-    return NextResponse.json({ error: 'Contact name is required' }, { status: 400 });
+    return NextResponse.json({ error: 'Contact name is required' }, { status: 400, headers: CORS });
   }
   if (!body.product) {
-    return NextResponse.json({ error: 'Product is required' }, { status: 400 });
+    return NextResponse.json({ error: 'Product is required' }, { status: 400, headers: CORS });
   }
 
   const now = new Date().toISOString();
@@ -70,5 +80,5 @@ export async function POST(req: NextRequest) {
   };
 
   await saveLead(lead);
-  return NextResponse.json(lead, { status: 201 });
+  return NextResponse.json(lead, { status: 201, headers: CORS });
 }

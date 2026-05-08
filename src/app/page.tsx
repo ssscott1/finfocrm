@@ -165,7 +165,7 @@ export default function HomePage() {
       const firstname = parts[0];
       const lastname = parts.slice(1).join(' ') || '-';
 
-      const res = await fetch('/api/leads', {
+      const res = await fetch('https://equipmentfinancecrm.netlify.app/api/leads', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

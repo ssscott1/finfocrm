@@ -696,7 +696,7 @@ async function submitForm(e) {
   };
 
   try {
-    const res = await fetch('/api/leads', {
+    const res = await fetch(API_BASE + '/api/leads', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
@@ -733,6 +733,12 @@ function resetForm() {
   btn.disabled = false;
   btn.innerHTML = `Submit Fast Approval Referral <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>`;
 }
+
+// ═══════════════════════════════════════════════════════════
+//  Config — API lives on the CRM domain
+// ═══════════════════════════════════════════════════════════
+
+const API_BASE = 'https://equipmentfinancecrm.netlify.app';
 
 // ═══════════════════════════════════════════════════════════
 //  Boot
