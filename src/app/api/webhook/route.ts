@@ -12,7 +12,6 @@ import { Lead } from '@/lib/types';
 import { randomUUID } from 'crypto';
 
 // Maps Netlify form names to CRM product types.
-// Add/update these to match the actual form names on finfo.com.au.
 const FORM_NAME_TO_PRODUCT: Record<string, string> = {
   'car-loan':          'Car Loan',
   'boat-loan':         'Boat Loan',
@@ -24,6 +23,23 @@ const FORM_NAME_TO_PRODUCT: Record<string, string> = {
   'smsf-setup':        'SMSF Setup',
   'smsf':              'SMSF Setup',
   'insurance':         'Insurance',
+};
+
+// Maps referral-type field values from finfo.com.au to CRM product types.
+const REFERRAL_TYPE_TO_PRODUCT: Record<string, string> = {
+  'car loan':                      'Car Loan',
+  'car, boat & personal loans':    'Car Loan',
+  'boat loan':                     'Boat Loan',
+  'personal loan':                 'Personal Loan',
+  'home loan':                     'Mortgage',
+  'home loan referral':            'Mortgage',
+  'mortgage':                      'Mortgage',
+  'accountant':                    'Accountant',
+  'financial adviser':             'Financial Adviser',
+  'financial advisor':             'Financial Adviser',
+  'smsf setup':                    'SMSF Setup',
+  'smsf':                          'SMSF Setup',
+  'insurance':                     'Insurance',
 };
 
 export async function POST(req: NextRequest) {
@@ -45,18 +61,28 @@ export async function POST(req: NextRequest) {
   // Netlify Forms webhook payload shape:
   // { form_name, data: { firstname, lastname, email, phone, state, timeframe, product, notes }, referrer, created_at }
   const data = (body.data as Record<string, string>) || {};
+  const formName = (body.form_name as string || '').toLowerCase();
 
-  const firstname = (data.firstname || data.first_name || (body.first_name as string) || '').trim();
-  const lastname  = (data.lastname  || data.last_name  || (body.last_name  as string) || '').trim();
+  // finfo.com.au referral form uses hyphenated field names: first-name, last-name, referral-type
+  const firstname = (data['first-name'] || data.firstname || data.first_name || '').trim();
+  const lastname  = (data['last-name']  || data.lastname  || data.last_name  || '').trim();
+
+  // finfo-subscribers is a newsletter-only form — skip lead creation
+  if (formName === 'finfo-subscribers') {
+    console.log(`[webhook] Newsletter subscription: ${data.email}`);
+    return NextResponse.json({ success: true, skipped: 'newsletter' });
+  }
 
   if (!firstname && !lastname) {
     return NextResponse.json({ error: 'Missing name fields' }, { status: 400 });
   }
 
-  // Resolve product: prefer explicit field, fall back to form name mapping
-  const formName = (body.form_name as string || '').toLowerCase();
+  // Resolve product from referral-type field, then form name mapping
+  const referralType = (data['referral-type'] || data.referral_type || '').toLowerCase();
   const product =
     data.product ||
+    REFERRAL_TYPE_TO_PRODUCT[referralType] ||
+    REFERRAL_TYPE_TO_PRODUCT[Object.keys(REFERRAL_TYPE_TO_PRODUCT).find(k => referralType.includes(k)) || ''] ||
     FORM_NAME_TO_PRODUCT[formName] ||
     FORM_NAME_TO_PRODUCT[Object.keys(FORM_NAME_TO_PRODUCT).find(k => formName.includes(k)) || ''] ||
     'Unknown';
